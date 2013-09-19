@@ -9,7 +9,7 @@ var set_once_action = function(action, who, whom, success){
 	client.query(
 		"UPDATE my_ships SET action = $1, action_target_id = $2 WHERE id = $3;",
 		[action, whom, who],
-		function(){console.log('set_once_action',success)
+		function(){
 			if(typeof(success) == "function"){
     			success();
     		}
