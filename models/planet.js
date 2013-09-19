@@ -62,6 +62,7 @@ var tick = function(){
                 }
             );
         }else{
+            get_mining_count_finish = true;
             after_tick();
         }
     });
