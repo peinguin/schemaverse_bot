@@ -27,6 +27,7 @@ var repair_finish = false;
 var get_mining_count_finish = false;
 
 var after_tick = function(){
+    console.log('after_tick', repair_finish, get_mining_count_finish);
     if(repair_finish && get_mining_count_finish){
         setTimeout(tick,tick_time);
     }
@@ -61,6 +62,8 @@ var tick = function(){
                     tick_time += 1000;
                 }
             );
+        }else{
+            after_tick();
         }
     });
 }

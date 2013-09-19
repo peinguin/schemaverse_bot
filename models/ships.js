@@ -9,7 +9,7 @@ var set_once_action = function(action, who, whom, success){
 	client.query(
 		"UPDATE my_ships SET action = $1, action_target_id = $2 WHERE id = $3;",
 		[action, whom, who],
-		function(){
+		function(){console.log('set_once_action',success)
 			if(typeof(success) == "function"){
     			success();
     		}
@@ -18,7 +18,13 @@ var set_once_action = function(action, who, whom, success){
 }
 
 var get_damaged = function(planet, callback){
-	client.query("SELECT * FROM my_ships WHERE current_health < max_health AND Location ~= $1;", 
+	client.query(
+		"SELECT *\
+		FROM my_ships damaged\
+		WHERE\
+			damaged.current_health < damaged.max_health AND\
+			damaged.Location ~= $1 AND\
+			(SELECT COUNT(engineers.id) FROM my_ships engineers WHERE engineers.action = 'REPAIR' AND engineers.action_target_id = damaged.id) = 0;", 
 		[planet.location],
 		function(err, result){
 	        if (!err){
