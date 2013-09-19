@@ -1,0 +1,2 @@
+exports.username = '';
+exports.password = '';
