@@ -1,5 +1,6 @@
 
 var client = undefined;
+var user = undefined;
 
 var tick_time = 150000;
 
@@ -36,7 +37,6 @@ var tick = function(){
 
     repair_finish = false;
     get_mining_count_finish = false;
-
     var json = toJSON();
 
     ShipsModel.repair(json, function(){
@@ -60,8 +60,9 @@ var tick = function(){
     });
 }
 
-var constructor = function (c, p) {
+var constructor = function (c, p, u) {
 	client = c;
+    user = u;
 
 	id = p.id;
     name = p.name;

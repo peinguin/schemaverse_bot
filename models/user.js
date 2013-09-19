@@ -4,7 +4,10 @@ var client = undefined;
 var fuel_to_save = 100000;
 var fuel_to_sell = 10000;
 
+var money_to_upgrade = 200000;
+
 var tick_timeout = 160000;
+var ship_upgrade_timeout = 10000;
 
 var last_tick = undefined;
 
@@ -20,7 +23,7 @@ var id = undefined,
 	rgb = undefined;
 
 var planetsCollection = undefined;
-var shipsModel = undefined;
+var ShipsModel = require('./ships');;
 
 var update = function(callback){
     client.query("SELECT * from my_player", function(err, result){
@@ -91,6 +94,22 @@ var tick = function(){
     });
 }
 
+var ship_upgrade_tick = function(){
+
+    if(balance > money_to_upgrade){
+        ShipsModel.upgrade_ship(json, function(){
+            ship_upgrade_timeout -= 1000;
+            if(ship_upgrade_timeout < 1000){
+                ship_upgrade_timeout = 1000;
+            }
+            setTimeout(ship_upgrade_tick, ship_upgrade_timeout);
+        });
+    }else{
+        setTimeout(ship_upgrade_tick, ship_upgrade_timeout);
+        ship_upgrade_timeout += 1000;
+    }
+}
+
 var get_tick = function(success){
     client.query(
         "SELECT * FROM tic_seq;",
@@ -111,10 +130,26 @@ var get_tick = function(success){
 var constructor = function (c) {
 	client = c;
     update(function(){
-        planetsCollection = new require('./../collections/planets').constructor(client);
+        planetsCollection = new require('./../collections/planets').constructor(client, this);
         tick();
+        ship_upgrade_tick();
     })
                              
 }
 
 exports.constructor = constructor;
+
+exports.toJSON = function(){
+    return {
+        id:id,
+        username:username,
+        created:created,
+        balance:balance,
+        fuel_reserve:fuel_reserve,
+        password:password,
+        error_channel:error_channel,
+        starting_fleet:starting_fleet,
+        symbol:symbol,
+        rgb:rgb
+    };
+}

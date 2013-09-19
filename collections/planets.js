@@ -1,12 +1,14 @@
 
 var client = undefined;
+var user = undefined;
 
 var planets = [];
 
 var PlanetModel = require('./../models/planet');
 
-var constructor = function (c) {
+var constructor = function (c, u) {
 	client = c;
+    user = u;
 
     (require('./../models/ships')).setClient(client);
 
@@ -18,15 +20,19 @@ var constructor = function (c) {
            
             if(result.rows.length > 0){
             	for(var i = 0; i < result.rows.length; i++){
-            		planets.push(new PlanetModel.constructor(client, {
-            			id: result.rows[i].id,
-            			name: result.rows[i].name,
-            			mine_limit: result.rows[i].mine_limit,
-            			location_x: result.rows[i].location_x,
-            			location_y: result.rows[i].location_y,
-            			conqueror_id: result.rows[i].conqueror_id,
-            			location: result.rows[i].location
-            		}));
+            		planets.push(new PlanetModel.constructor(
+                        client,
+                        {
+                			id: result.rows[i].id,
+                			name: result.rows[i].name,
+                			mine_limit: result.rows[i].mine_limit,
+                			location_x: result.rows[i].location_x,
+                			location_y: result.rows[i].location_y,
+                			conqueror_id: result.rows[i].conqueror_id,
+                			location: result.rows[i].location
+                        },
+                        user
+                    ));
             	}
 
             }else{

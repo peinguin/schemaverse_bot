@@ -1,5 +1,13 @@
-console.log('ships model loaded');
+
 var client = undefined;
+
+var max = 500;
+var MAX_HEALTH = 1000;
+var MAX_FUEL = 200000;
+var MAX_SPEED = 800000;
+var RANGE = 5000;
+
+var upgrade_cost = 2375;
 
 exports.setClient = function(c) {
 	client = c;
@@ -126,4 +134,54 @@ exports.create_miner = function(planet, success, error){
 	        }                 
     	}
     );
+}
+
+exports.upgrade_ship = function(success){
+	client.query(
+		"SELECT id, name, max_health, max_fuel, max_speed, range, attack, defense, engineering, prospecting FROM my_ships\
+		WHERE\
+			max_health < $1 OR max_fuel < $2 OR max_speed < $3 OR range < $4 OR (attack < $5 AND defense < $5 AND engineering < $5 AND prospecting < $5)\
+		LIMIT 1;",
+		[MAX_HEALTH, MAX_FUEL, MAX_SPEED, RANGE, max],
+		function(err, result){
+			if (err){
+	            throw err;
+	        }else{
+	        	if(result.rowCount > 0){
+
+	        		if(result.rows[0].name == 'miner'){
+	        			var skill = 'PROSPECTING';
+	        		}else if(result.rows[0].name == 'engineer'){
+	        			var skill = 'ENGINEERING';
+	        		} if(result.rows[0].name == 'attacker'){
+	        			var skill = 'ATTACK';
+	        		}else{
+	        			var skill = 'DEFENSE';
+	        		}
+
+	        		client.query(
+	        			"SELECT id,\
+						   UPGRADE(id, 'MAX_HEALTH', 2), \
+						   UPGRADE(id, 'MAX_FUEL', 400), \
+						   UPGRADE(id, 'MAX_SPEED', 1600), \
+						   UPGRADE(id, 'RANGE', 10), \
+						   UPGRADE(id, $2, 1)\
+						 FROM my_ships \
+						 WHERE id=$1;",
+						[result.rows[0].id, skill],
+						function(err, result){
+							if (err){
+					            throw err;
+					        }else{
+					        	console.log('Upgrade',skill,'success');
+					        	success();
+					        }
+						}
+					);
+	        	}else{
+	        		success();
+	        	}
+	        }     
+		}
+	);
 }
