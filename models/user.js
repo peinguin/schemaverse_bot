@@ -4,6 +4,10 @@ var client = undefined;
 var fuel_to_save = 100000;
 var fuel_to_sell = 10000;
 
+var tick_timeout = 160000;
+
+var last_tick = undefined;
+
 var id = undefined,
 	username = undefined,
 	created = undefined,
@@ -15,7 +19,7 @@ var id = undefined,
 	symbol = undefined,
 	rgb = undefined;
 
-var planetsModel = undefined;
+var planetsCollection = undefined;
 var shipsModel = undefined;
 
 var update = function(callback){
@@ -64,21 +68,50 @@ var fuel_sell = function(FUEL, success){
 }
 
 var tick = function(){
+    get_tick(function(lt){
+        if(lt != last_tick){
+            last_tick = lt;
 
-    update(function(rows){
+            tick_timeout -= 1000;
+            if(tick_timeout < 1000){
+                tick_timeout = 1000;
+            }
 
-        if(fuel_reserve > fuel_to_save + fuel_to_sell){
-            fuel_sell(fuel_reserve - fuel_to_save, function(){setTimeout(tick, 10000);});
+            update(function(rows){
+                if(fuel_reserve > fuel_to_save + fuel_to_sell){
+                    fuel_sell(fuel_reserve - fuel_to_save, function(){setTimeout(tick, tick_timeout);});
+                }else{
+                    setTimeout(tick, tick_timeout);
+                }
+            });
         }else{
-            setTimeout(tick, 10000);
+            setTimeout(tick, tick_timeout);
+            tick_timeout += 1000;
         }
     });
+}
+
+var get_tick = function(success){
+    client.query(
+        "SELECT * FROM tic_seq;",
+        function(err, result){
+            if (err){
+                throw err;
+            }else{
+                var last_tick = result.rows[0].last_value;
+                console.log('Tick '+last_tick, '. ','tick_timeout', tick_timeout);
+                if(typeof(success) == 'function'){
+                    success(last_tick);
+                }
+            }
+        }
+    );  
 }
 
 var constructor = function (c) {
 	client = c;
     update(function(){
-        planetsModel = new require('./../collections/planets').constructor(client);
+        planetsCollection = new require('./../collections/planets').constructor(client);
         tick();
     })
                              
