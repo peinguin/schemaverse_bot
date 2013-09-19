@@ -1,7 +1,7 @@
 
 var client = undefined;
 
-var tick_time = 10000;
+var tick_time = 150000;
 
 var ShipsModel = require('./ships');
 
@@ -49,16 +49,8 @@ var tick = function(){
             ShipsModel.create_miner(
                 json,
                 function(){
-                    tick_time -= 1000;
-                    if(tick_time < 1000){
-                        tick_time = 1000;
-                    }
-
                     get_mining_count_finish = true;
                     after_tick();
-                },
-                function(){
-                    tick_time += 1000;
                 }
             );
         }else{
