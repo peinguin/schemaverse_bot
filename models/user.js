@@ -147,6 +147,7 @@ var ship_refuel_tick = function(){
                     console.log('Ship',ship,'refuled');
                     ship_refuel_timeout = 1000;
                     setTimeout(ship_refuel_tick, ship_refuel_timeout);
+                    update();
                 });
             }else{
                 ship_refuel_timeout += 1000;
