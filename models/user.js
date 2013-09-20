@@ -84,12 +84,11 @@ var after_tick = function(){
 
 var tick = function(){
     get_tick(function(lt){
-
-        actions_rejected = false;
-        fuel_sells = false;
-
         if(lt != last_tick){
             last_tick = lt;
+
+            actions_rejected = false;
+            fuel_sells = false;
 
             tick_timeout -= 1000;
             if(tick_timeout < 1000){
@@ -116,10 +115,8 @@ var tick = function(){
         }else{
             actions_rejected = true;
             fuel_sells = true;
-
             tick_timeout += 1000;
-
-            after_tick();
+            setTimeout(tick, 1000);
         }
     });
 }
