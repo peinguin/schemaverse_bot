@@ -13,7 +13,7 @@ exports.setClient = function(c) {
 	client = c;
 }
 
-var set_once_action = function(action, who, whom, success){
+var set_long_action = function(action, who, whom, success){
 	client.query(
 		"UPDATE my_ships SET action = $1, action_target_id = $2 WHERE id = $3;",
 		[action, whom, who],
@@ -64,8 +64,8 @@ var get_engineer = function(planet, callback){
 				        		callback(result.rows[0].id);
 				        	}else{
 				        		console.log('Engineer not created');
-				        		if(typeof(error) == "function"){
-				        			error();
+				        		if(typeof(callback) == "function"){
+				        			callback();
 				        		}
 				        	}
 				        }                 
@@ -76,35 +76,23 @@ var get_engineer = function(planet, callback){
 	);
 }
 
-var repair = function(planet, success){
-	console.log('Check for repair needed');
-	get_damaged(planet, function(damaged){
-		console.log('damaged.length', damaged.length);
-		if(damaged.length > 0){
-			get_engineer(planet, function(engineer){
-				set_once_action(
-					'REPAIR',
-					engineer,
-					damaged[0].id,
-					success
-				);
-			});
-	    }else{
-	    	if(typeof(success) == "function"){
-    			success();
-    		}
-	    }
+var repair = function(damaged, planet, success){	
+	console.log('Repair requested for', damaged);
+	get_engineer(planet, function(engineer){
+		set_long_action(
+			'REPAIR',
+			engineer,
+			damaged,
+			success
+		);
 	});
 }
 
-exports.repair = repair;
-
-exports.get_mining_count = function(planet, callback){
+exports.get_attackers_count = function(planet, callback){
 	client.query(
-		"SELECT COUNT(id) count FROM my_ships WHERE action = 'MINE' AND Location ~= $1;",
+		"SELECT COUNT(id) count FROM my_ships WHERE name = 'attacker' AND Location ~= $1;",
 		[planet.location],
 		function(err, result){
-			console.log('Miners count', result.rows[0].count);
 	        if (!err){
 	            callback(result.rows[0].count);
 	        } else {
@@ -114,7 +102,23 @@ exports.get_mining_count = function(planet, callback){
     );
 }
 
-exports.create_miner = function(planet, success, error){
+exports.repair = repair;
+
+exports.get_mining_count = function(planet, callback){
+	client.query(
+		"SELECT COUNT(id) count FROM my_ships WHERE action = 'MINE' AND Location ~= $1;",
+		[planet.location],
+		function(err, result){
+	        if (!err){
+	            callback(result.rows[0].count);
+	        } else {
+	            throw err;
+	        }                      
+    	}
+    );
+}
+
+exports.create_miner = function(planet, callback){
 	client.query(
 		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('miner',0,0,0,20,$1) RETURNING id;",
 		[planet.location],
@@ -124,11 +128,11 @@ exports.create_miner = function(planet, success, error){
 	        }else{
 	        	if(result.rowCount > 0){
 	        		console.log('Miner created');
-	        		set_once_action('MINE', result.rows[0].id, planet.id, success);
+	        		set_long_action('MINE', result.rows[0].id, planet.id, callback);
 	        	}else{
 	        		console.log('Miner not created');
-	        		if(typeof(error) == "function"){
-	        			error();
+	        		if(typeof(callback) == "function"){
+	        			callback();
 	        		}
 	        	}
 	        }                 
@@ -153,7 +157,7 @@ exports.upgrade_ship = function(success){
 	        			var skill = 'PROSPECTING';
 	        		}else if(result.rows[0].name == 'engineer'){
 	        			var skill = 'ENGINEERING';
-	        		} if(result.rows[0].name == 'attacker'){
+	        		}else if(result.rows[0].name == 'attacker'){
 	        			var skill = 'ATTACK';
 	        		}else{
 	        			var skill = 'DEFENSE';
@@ -182,6 +186,60 @@ exports.upgrade_ship = function(success){
 	        		success();
 	        	}
 	        }     
+		}
+	);
+}
+
+exports.get_damaged = get_damaged;
+
+exports.create_attacker = function(planet, callback){
+	client.query(
+		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('attacker',0,0,0,20,$1) RETURNING id;",
+		[planet.location],
+		function(err, result){
+	        if (err){
+	            throw err;
+	        }else{
+	        	if(result.rowCount > 0){
+	        		console.log('Attacker created');
+	        	}else{
+	        		console.log('Attacker not created');
+	        	}
+	        	if(typeof(callback) == "function"){
+        			callback();
+        		}
+	        }                 
+    	}
+    );
+}
+
+exports.reject_long_action = function(action, who, whom, success){
+
+	var params = [];
+	if(who){
+		params.push(who);
+	}
+	if(whom){
+		params.push(whom);
+	}
+	if(action){
+		params.push(action);
+	}
+
+	client.query(
+		"UPDATE my_ships SET action = NULL WHERE True"+
+		(who?' AND id = $'+(params.indexOf(who)+1):'')+
+		(whom?' AND action_target_id = $'+(params.indexOf(whom)+1):'')+
+		(action?' AND action = $'+(params.indexOf(action)+1):'')+";",
+		params,
+		function(err, result){
+			if (err){
+	            throw err;
+		    }else{
+				if(typeof(success) == "function"){
+	    			success();
+	    		}
+	    	}
 		}
 	);
 }
