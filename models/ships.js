@@ -117,7 +117,7 @@ exports.get_mining_count = function(planet, callback){
     );
 }
 
-exports.create_miner = function(planet, callback){
+exports.create_miner = function(planet, success, error){
 	client.query(
 		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('miner',0,0,0,20,$1) RETURNING id;",
 		[planet.location],
@@ -127,11 +127,10 @@ exports.create_miner = function(planet, callback){
 	        }else{
 	        	if(result.rowCount > 0){
 	        		console.log('Miner created');
-	        		set_long_action('MINE', result.rows[0].id, planet.id, callback);
+	        		set_long_action('MINE', result.rows[0].id, planet.id, success);
 	        	}else{
-	        		console.log('Miner not created');
-	        		if(typeof(callback) == "function"){
-	        			callback();
+	        		if(typeof(error) == "function"){
+	        			error();
 	        		}
 	        	}
 	        }                 
@@ -191,7 +190,7 @@ exports.upgrade_ship = function(success){
 
 exports.get_damaged = get_damaged;
 
-exports.create_attacker = function(planet, callback){
+exports.create_attacker = function(planet, success, error){
 	client.query(
 		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('attacker',0,0,0,20,$1) RETURNING id;",
 		[planet.location],
@@ -201,12 +200,14 @@ exports.create_attacker = function(planet, callback){
 	        }else{
 	        	if(result.rowCount > 0){
 	        		console.log('Attacker created');
+	        		if(typeof(success) == "function"){
+	        			success();
+	        		}
 	        	}else{
-	        		console.log('Attacker not created');
+	        		if(typeof(error) == "function"){
+	        			error();
+	        		}
 	        	}
-	        	if(typeof(callback) == "function"){
-        			callback();
-        		}
 	        }                 
     	}
     );

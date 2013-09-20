@@ -131,7 +131,7 @@ var attack_enemy_ships = function(){
 var constructor = function (c) {
     
     //constants
-    var tick_timeout = 360000;
+    var tick_timeout = 1000;
     
     // vars
     var on = [],
