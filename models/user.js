@@ -9,6 +9,7 @@ var money_to_build_attacker = 150000;
 
 var tick_timeout = 160000;
 var ship_upgrade_timeout = 10000;
+var ship_refuel_timeout = 10000;
 
 var last_tick = undefined;
 
@@ -127,10 +128,7 @@ var ship_upgrade_tick = function(){
 
     if(balance > money_to_upgrade){
         ShipsModel.upgrade_ship(function(){
-            ship_upgrade_timeout -= 1000;
-            if(ship_upgrade_timeout < 1000){
-                ship_upgrade_timeout = 1000;
-            }
+            ship_upgrade_timeout = 1000;
             setTimeout(ship_upgrade_tick, ship_upgrade_timeout);
             update();
         });
@@ -139,6 +137,23 @@ var ship_upgrade_tick = function(){
         ship_upgrade_timeout += 1000;
     }
 }
+
+var ship_refuel_tick = function(){
+    ShipsModel.get_fuel_empty_ship(function(ship){
+        if(ship){
+            console.log('Ship',ship,'is empty');
+            ShipsModel.refuel(ship, function(){
+                console.log('Ship',ship,'refuled');
+                ship_refuel_timeout = 1000;
+                setTimeout(ship_refuel_tick, ship_refuel_timeout);
+            });
+        }else{
+            ship_refuel_timeout += 1000;
+            setTimeout(ship_refuel_tick, ship_refuel_timeout);
+        }
+    });
+}
+
 
 var get_tick = function(success){
     client.query(
@@ -178,8 +193,8 @@ var constructor = function (c) {
         planetsCollection = new require('./../collections/planets').constructor(client, this);
         tick();
         ship_upgrade_tick();
-    })
-                             
+        ship_refuel_tick();
+    })                          
 }
 
 exports.constructor = constructor;

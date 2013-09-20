@@ -40,6 +40,27 @@ var after_tick = function(){
     }
 }
 
+var get_nearest_planet = function(success){
+
+    client.query(
+        "SELECT * FROM planets WHERE conqueror_id <> get_player_id(SESSION_USER) ORDER BY location <-> $1 LIMIT 1",
+        [location],
+        function(err, result){
+            if (err){
+                throw err;
+            }else{
+                if(result.rowCount > 0){
+                    if(typeof(success) == "function"){
+                        success(result.row[0]);
+                    }
+                }else{
+                    throw 'You won ???';
+                }
+            }                 
+        }
+    );
+}
+
 var tick = function(){
 
     repair_finish = false;
