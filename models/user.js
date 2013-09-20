@@ -139,19 +139,24 @@ var ship_upgrade_tick = function(){
 }
 
 var ship_refuel_tick = function(){
-    ShipsModel.get_fuel_empty_ship(function(ship){
-        if(ship){
-            console.log('Ship',ship,'is empty');
-            ShipsModel.refuel(ship, function(){
-                console.log('Ship',ship,'refuled');
-                ship_refuel_timeout = 1000;
+    if(fuel_reserve > 0){
+        ShipsModel.get_fuel_empty_ship(function(ship){
+            if(ship){
+                console.log('Ship',ship,'is empty');
+                ShipsModel.refuel(ship, function(){
+                    console.log('Ship',ship,'refuled');
+                    ship_refuel_timeout = 1000;
+                    setTimeout(ship_refuel_tick, ship_refuel_timeout);
+                });
+            }else{
+                ship_refuel_timeout += 1000;
                 setTimeout(ship_refuel_tick, ship_refuel_timeout);
-            });
-        }else{
-            ship_refuel_timeout += 1000;
-            setTimeout(ship_refuel_tick, ship_refuel_timeout);
-        }
-    });
+            }
+        });
+    }else{
+        ship_refuel_timeout += 1000;
+        setTimeout(ship_refuel_tick, ship_refuel_timeout);
+    }
 }
 
 
