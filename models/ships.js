@@ -77,7 +77,6 @@ var get_engineer = function(planet, callback){
 }
 
 var repair = function(damaged, planet, success){	
-	console.log('Repair requested for', damaged);
 	get_engineer(planet, function(engineer){
 		set_long_action(
 			'REPAIR',
@@ -145,6 +144,7 @@ exports.upgrade_ship = function(success){
 		"SELECT id, name, max_health, max_fuel, max_speed, range, attack, defense, engineering, prospecting FROM my_ships\
 		WHERE\
 			max_health < $1 OR max_fuel < $2 OR max_speed < $3 OR range < $4 OR (attack < $5 AND defense < $5 AND engineering < $5 AND prospecting < $5)\
+		ORDER BY range asc\
 		LIMIT 1;",
 		[MAX_HEALTH, MAX_FUEL, MAX_SPEED, RANGE, max],
 		function(err, result){
@@ -177,7 +177,6 @@ exports.upgrade_ship = function(success){
 							if (err){
 					            throw err;
 					        }else{
-					        	console.log('Upgrade',skill,'success');
 					        	success();
 					        }
 						}
@@ -277,4 +276,32 @@ exports.refuel = function(ship, callback){
 	        }                      
    		}
    	);
+}
+
+exports.get_enemy_ship_in_range = function(callback){
+	client.query(
+		"SELECT ships_in_range.id id, ships_in_range.ship_in_range_of ship_in_range_of\
+		FROM ships_in_range, my_ships\
+		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker';", 
+		function(err, result){
+	        if (!err){
+	        	if(result.rowCount > 0){
+	        		if(typeof(callback) == 'function'){
+		        		callback(result.rows[0].ship_in_range_of, result.rows[0].id);
+		        	}
+	        	}
+	        } else {
+	            throw err;
+	        }                      
+   		}
+   	);
+}
+
+exports.attack = function(who, whom, callback){
+	set_long_action(
+		'ATTACK',
+		who,
+		whom,
+		callback
+	);
 }

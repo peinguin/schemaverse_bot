@@ -2,8 +2,6 @@
 var client = undefined;
 var user = undefined;
 
-var tick_time = 1000;
-
 var attackers_per_planet = 50;
 
 var ShipsModel = require('./ships');
@@ -26,20 +24,6 @@ var toJSON = function(){return {
     location: location
 };};
 
-var repair_finish = false;
-var get_mining_count_finish = false;
-var build_attacker_finish = false;
-
-var after_tick = function(){
-    if(
-        repair_finish &&
-        get_mining_count_finish &&
-        build_attacker_finish
-    ){
-        setTimeout(tick,tick_time);
-    }
-}
-
 var get_nearest_planet = function(success){
 
     client.query(
@@ -61,74 +45,39 @@ var get_nearest_planet = function(success){
     );
 }
 
-var tick = function(){
-
-    repair_finish = false;
-    get_mining_count_finish = false;
-    build_attacker_finish = false;
+var repair_damaged = function(){
     var json = toJSON();
-
     ShipsModel.get_damaged(json, function(damaged){
         if(damaged.length > 0){
-            console.log('damaged.length', damaged.length);
-            ShipsModel.repair(damaged[0].id, json, function(){
-                tick_time = 1000;
-
-                repair_finish = true;
-                after_tick();
-            });
-        }else{
-            tick_time += 1000;
-            repair_finish = true;
-            after_tick();
+            ShipsModel.repair(damaged[0].id, json, repair_damaged);
         }
     });
+}
 
+var create_miners = function(){
+    var json = toJSON();
     ShipsModel.get_mining_count(json, function(mining_ships){
         if(mining_ships < mine_limit){
             console.log('Miners count', mining_ships);
-            ShipsModel.create_miner(
-                json,
-                function(){
-
-                    tick_time -= 1000;
-                    if(tick_time < 1000){
-                        tick_time = 1000;
-                    }
-
-                    get_mining_count_finish = true;
-                    after_tick();
-                }
-            );
-        }else{
-            tick_time += 1000;
-            get_mining_count_finish = true;
-            after_tick();
+            ShipsModel.create_miner(json,create_miners);
         }
     });
+}
 
+var create_attackers = function(){
+    var json = toJSON();
     ShipsModel.get_attackers_count(json, function(attackers_ships){
         if(attackers_ships < attackers_per_planet){
             console.log('Attackers count', attackers_ships);
-            ShipsModel.create_attacker(
-                json,
-                function(){
-
-                    tick_time -= 1000;
-                    if(tick_time < 1000){
-                        tick_time = 1000;
-                    }
-
-                    build_attacker_finish = true;
-                    after_tick();
-                }
-            );
-        }else{
-            build_attacker_finish = true;
-            tick_time += 1000;
-            after_tick();
+            ShipsModel.create_attacker(json,create_attackers);
         }
     });
+}
+
+var tick = function(){
+    repair_damaged();
+    create_miners();
+    create_attackers();
 }
 
 var constructor = function (c, p, u) {
@@ -143,7 +92,7 @@ var constructor = function (c, p, u) {
     conqueror_id = p.conqueror_id;
     location = p.location;
 
-    tick();
+    user.on(tick);
 }
 
 exports.constructor = constructor;
