@@ -122,7 +122,6 @@ toJSON = function(){
 var attack_enemy_ships = function(){
     ShipsModel.get_enemy_ship_in_range(function(ship, enemy){
         ShipsModel.attack(ship, enemy, function(){
-            console.log('Ship',ship,'attacked',enemy);
             attack_enemy_ships();
         });
     });
@@ -145,7 +144,7 @@ var constructor = function (c) {
 	client = c;
 
     //private methods
-    var after_tick = function(){
+    var after_tick = function(){console.log(actions_rejected, fuel_sells,attack_rejected)
         if(
             actions_rejected &&
             fuel_sells &&
@@ -228,6 +227,8 @@ var constructor = function (c) {
         planetsCollection = new require('./../collections/planets').constructor(client, user);
         tick();
     });
+
+    this.on(ShipsModel.amendment_course);
 }
 
 exports.constructor = constructor;

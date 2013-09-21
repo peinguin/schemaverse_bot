@@ -35,7 +35,7 @@ var get_nearest_planet = function(success){
             }else{
                 if(result.rowCount > 0){
                     if(typeof(success) == "function"){
-                        success(result.row[0]);
+                        success(result.rows[0]);
                     }
                 }else{
                     throw 'You won ???';
@@ -74,10 +74,23 @@ var create_attackers = function(){
     });
 }
 
+var go_to_conqueror = function(){
+    var json = toJSON();
+    ShipsModel.get_attackers_count(json, function(attackers_ships){
+        if(attackers_ships >= attackers_per_planet){
+            get_nearest_planet(function(nearest_planet_location){
+                console.log('Send attackers')
+                //ShipsModel.send_ten_attackers(nearest_planet_location);
+            });
+        }
+    });
+}
+
 var tick = function(){
     repair_damaged();
     create_miners();
     create_attackers();
+    go_to_conqueror();
 }
 
 var constructor = function (c, p, u) {

@@ -31,7 +31,7 @@ var get_damaged = function(planet, callback){
 		FROM my_ships damaged\
 		WHERE\
 			damaged.current_health < damaged.max_health AND\
-			damaged.Location ~= $1 AND\
+			(damaged.Location <-> $1) < 10 AND\
 			(SELECT COUNT(engineers.id) FROM my_ships engineers WHERE engineers.action = 'REPAIR' AND engineers.action_target_id = damaged.id) = 0;", 
 		[planet.location],
 		function(err, result){
@@ -46,7 +46,7 @@ var get_damaged = function(planet, callback){
 
 var get_engineer = function(planet, callback){
 	client.query(
-		"SELECT * FROM my_ships WHERE name = 'engineer' AND action is NULL AND Location ~= $1 LIMIT 1;",
+		"SELECT * FROM my_ships WHERE name = 'engineer' AND action is NULL AND (my_ships.Location <-> $1) < 10 LIMIT 1;",
 		[planet.location],
 		function(err, result){
 			if(result.rows.length > 0){
@@ -89,7 +89,7 @@ var repair = function(damaged, planet, success){
 
 exports.get_attackers_count = function(planet, callback){
 	client.query(
-		"SELECT COUNT(id) count FROM my_ships WHERE name = 'attacker' AND Location ~= $1;",
+		"SELECT COUNT(id) count FROM my_ships WHERE name = 'attacker' AND (my_ships.Location <-> $1) < 10;",
 		[planet.location],
 		function(err, result){
 	        if (!err){
@@ -105,7 +105,7 @@ exports.repair = repair;
 
 exports.get_mining_count = function(planet, callback){
 	client.query(
-		"SELECT COUNT(id) count FROM my_ships WHERE action = 'MINE' AND Location ~= $1;",
+		"SELECT COUNT(id) count FROM my_ships WHERE action = 'MINE' AND (my_ships.Location <-> $1) < 10;",
 		[planet.location],
 		function(err, result){
 	        if (!err){
@@ -172,9 +172,11 @@ exports.upgrade_ship = function(success){
 						 FROM my_ships \
 						 WHERE id=$1;",
 						[result.rows[0].id, skill],
-						function(err, result){
+						function(err, res){
 							if (err){
-					            throw err;
+								if(err != 'error: deadlock detected'){
+									throw err;
+								}
 					        }else{
 					        	success();
 					        }
@@ -283,7 +285,7 @@ exports.get_enemy_ship_in_range = function(callback){
 	client.query(
 		"SELECT ships_in_range.id id, ships_in_range.ship_in_range_of ship_in_range_of\
 		FROM ships_in_range, my_ships\
-		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker';", 
+		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker' AND my_ships.action is NULL;", 
 		function(err, result){
 	        if (!err){
 	        	if(result.rowCount > 0){
@@ -305,4 +307,32 @@ exports.attack = function(who, whom, callback){
 		whom,
 		callback
 	);
+}
+
+exports.send_ten_attackers = function(location){
+	client.query(
+		"SELECT\
+			(location <-> $1) dist,SHIP_COURSE_CONTROL(id,round((location <->$1)/2)::integer,null,$1)\
+		FROM my_ships WHERE name = 'attacker'\
+		LIMIT 10",
+		[location],
+		function(err, result){
+	        if (err) {
+	            throw err;
+	        }                      
+   		}
+   	);
+}
+
+exports.amendment_course = function(){
+	client.query(
+		"SELECT\
+			SHIP_COURSE_CONTROL(id, round((location <->my_ships.destination)/2)::integer, null, my_ships.destination )\
+		FROM my_ships WHERE (my_ships.destination <-> my_ships.location) > 10",
+		function(err, result){
+	        if (err) {
+	            throw err;
+	        }                      
+   		}
+   	);
 }
