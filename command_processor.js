@@ -2,7 +2,7 @@
 var commands = {};
 var history = [];
 var curr_command = '';
-var history_position = undefined;
+var history_position = 0;
 
 var user = undefined;
 var client = undefined;
@@ -42,53 +42,58 @@ var process_command = function(chunk){
 	}
 }
 
+var clean_line = function(){
+	process.stdout.write("\r                                                           \r");
+}
+
 var enable = function(u, c){
 
 	user = u;
 	client = c;	
 
-	var stdin = process.openStdin(); 
-	require('tty').setRawMode(true);    
-
-	stdin.on('keypress', function (chunk, key) {
-	  process.stdout.write('Get Chunk: ' + chunk + '\n');
-	  if (key && key.ctrl && key.name == 'c') process.exit();
-	});
-
-	/*process.stdin.setRawMode( true );
-	//process.stdin.resume();
-	//process.stdin.setEncoding('utf8');
+	process.stdin.setRawMode( true );
+	process.stdin.resume();
+	process.stdin.setEncoding('utf8');
 	console.log('Type command:');
 
-	process.stdin.on('keypress', function(chunk, key) {
-process.stdout.write('Get Chunk: ' + chunk +'\n');*/
-		/*if(key == ''){//enter
+	process.stdin.on('data', function(key) {
+		if ( key === '\u0003' ) {
+			process.exit();
+		}else if(key == "\r"){//enter
+			process.stdout.write("\n");
 			process_command(curr_command);
-			history.push(curr_command);
-			history_position = history.length - 1;
+			history_position = history.length;
 			curr_command = '';
-		}else if(key == ''){//up
+		}else if(key == '\u001b[A'){//up
 			history_position--;
-			if(history[history_position]){
+			if(history_position < 0){
+				history_position = -1;
+				curr_command = '';
+				clean_line();
+			}else if(history[history_position]){
 				curr_command = history[history_position];
-				process.stdout.write("\r                                                           ");
+				clean_line();
 				process.stdout.write(curr_command);
-			}else{
-				history_position = history.length - 1;
 			}
-		}else if(key == ''){//down
+		}else if(key == '\u001b[B'){//down
 			history_position++;
-			if(history[history_position]){
+			if(history_position == history.length){
+				history_position = history.length;
+				curr_command = '';
+				clean_line();
+			}else if(history[history_position]){
 				curr_command = history[history_position];
-				process.stdout.write("\r                                                           ");
+				clean_line();
 				process.stdout.write(curr_command);
-			}else{
-				history_position = history.length - 1;
 			}
+		}else if ( key === '\u007f' ) {
+			curr_command = curr_command.substr(0, curr_command.length - 1);
+			clean_line();
+			process.stdout.write(curr_command);
 		}else{
 			curr_command += key;
-			process.stdout.write(chunk);
-		}*/
+			process.stdout.write(key);
+		}
 	});
 
 	process.stdin.on('end', function() {

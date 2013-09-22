@@ -269,7 +269,9 @@ exports.reject_long_action = function(action, who, whom, success){
 		params,
 		function(err, result){
 			if (err){
-	            throw err;
+				if(err != 'error: deadlock detected'){
+	            	throw err;
+	        	}
 		    }else{
 				if(typeof(success) == "function"){
 	    			success();
