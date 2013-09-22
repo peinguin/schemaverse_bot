@@ -28,7 +28,10 @@ var events = [];
 var events_monitor = function(){
 
     var params = [];
-    var conditions = ["(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))"];
+    var conditions = [
+        "(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))",
+        "action not in ('UPGRADE_SHIP', 'BUY_SHIP', 'MINE_SUCCESS', 'REFUEL_SHIP', 'REPAIR', 'ATTACK', 'EXPLODE')"
+    ];
 
     if(lastevent){
         params.push(lastevent);

@@ -77,8 +77,7 @@ var go_to_conqueror = function(){
     ShipsModel.get_attackers_count(json, function(attackers_ships){
         if(attackers_ships >= attackers_per_planet){
             get_nearest_planet(function(nearest_planet_location){
-                console.log('Send attackers')
-                //ShipsModel.send_ten_attackers(nearest_planet_location);
+                ShipsModel.send_ten_attackers(nearest_planet_location.location);
             });
         }
     });

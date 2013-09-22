@@ -369,7 +369,7 @@ exports.attack = function(who, whom, callback){
 exports.send_ten_attackers = function(location){
 	client.query(
 		"SELECT\
-			(location <-> $1) dist,SHIP_COURSE_CONTROL(id,round((location <->$1)/2)::integer,null,$1)\
+			(location <-> $1) dist,SHIP_COURSE_CONTROL(id,(location <->$1)::integer,null,$1)\
 		FROM my_ships WHERE name = 'attacker'\
 		LIMIT 10",
 		[location],
