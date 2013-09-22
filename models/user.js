@@ -5,7 +5,7 @@ var fuel_to_save = 100000;
 var fuel_to_sell = 10000;
 
 var money_to_upgrade = 200000;
-var money_to_build_attacker = 150000;
+var money_to_build_attacker = 250000;
 
 var last_tick = undefined;
 
@@ -22,6 +22,46 @@ var id = undefined,
 
 var planetsCollection = undefined;
 var ShipsModel = require('./ships');
+
+var lastevent = undefined;
+var events = [];
+var events_monitor = function(){
+
+    var params = [];
+    var conditions = ["(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))"];
+
+    if(lastevent){
+        params.push(lastevent);
+        conditions.push('id > $1');
+    }
+
+    client.query(
+        "SELECT\
+            *\
+        FROM my_events\
+        WHERE"+conditions.join(' AND ')+"\
+        ORDER BY id desc;",
+        params,
+        function(err, result){
+            if (!err){
+                if(result.rowCount > 0){
+                    lastevent = result.rows[0].id;
+                    events += result.rows;
+
+                    for(var i in result.rows){
+                        if(result.rows[i].action == 'CONQUER'){
+                            console.log('conquered', result.rows[i]);
+                        }
+                    }
+
+                    console.log(result.rows);
+                }
+            }else{
+                throw err;
+            }
+        }
+    );
+}
 
 var update = function(callback){
     client.query("SELECT * from my_player", function(err, result){
@@ -40,7 +80,6 @@ var update = function(callback){
                 symbol         = result.rows[0].symbol;
                 rgb            = result.rows[0].rgb;
 
-                console.log('balance', balance, '. ', 'fuel_reserve', fuel_reserve);
                 if(typeof(callback) == 'function'){
                     callback();
                 }
@@ -127,6 +166,21 @@ var attack_enemy_ships = function(){
     });
 }
 
+var conquer_enemy_planet = function(){
+    ShipsModel.get_enemy_planet_in_range(function(ship, planet){
+        console.log(planet,'in range of',ship);
+        set_long_action('MINE', result.rows[0].id, planet.id, conquer_enemy_planet);
+    });
+}
+
+var autorepair_traveled = function(){
+    ShipsModel.get_damaged_in_travel(function(damaged){
+        if(damaged){
+            ShipsModel.autorepair(damaged, autorepair_traveled);
+        }
+    });
+}
+
 var constructor = function (c) {
     
     //constants
@@ -156,8 +210,9 @@ var constructor = function (c) {
 
     var tick = function(){
         get_tick(function(lt){
-            console.log('Tick '+lt, '. ','tick_timeout', tick_timeout);
             if(lt != last_tick){
+                console.log('Tick '+lt, '. ','tick_timeout', tick_timeout);
+
                 last_tick = lt;
 
                 actions_rejected = false;
@@ -194,6 +249,9 @@ var constructor = function (c) {
                 attack_enemy_ships();
                 ship_refuel();
                 ship_upgrade();
+                autorepair_traveled();
+                events_monitor();
+                ShipsModel.amendment_course();
 
                 for(var i in on){
                     on[i]();
@@ -210,7 +268,7 @@ var constructor = function (c) {
             }
         });
     }
-    
+    // public methods
     this.on = function(callback){
         if(typeof(callback) == 'function'){
             on.push(callback);
@@ -223,12 +281,34 @@ var constructor = function (c) {
         }
     }
 
+    this.get_planets = function(){
+        if(planetsCollection){
+            return planetsCollection.get_planets();
+        }else{
+            return [];
+        }
+    }
+
+    this.get_ships_count = function(callback){
+        client.query(
+            "SELECT COUNT(my_ships.id) count FROM my_ships;",
+            function(err, result){
+                if (err){
+                    throw err;
+                }else{
+                    if(typeof(callback) == 'function'){
+                        callback(result.rows[0].count);
+                    }
+                }
+            }
+        );
+    };
+
+    //constructor
     update(function(){
         planetsCollection = new require('./../collections/planets').constructor(client, user);
         tick();
     });
-
-    this.on(ShipsModel.amendment_course);
 }
 
 exports.constructor = constructor;
@@ -240,3 +320,9 @@ exports.updateRequest = update;
 exports.get_money_to_build_attacker = function(){
     return money_to_build_attacker;
 };
+
+exports.get_events = function(count){
+    if(!count)
+        count = events.length;
+    return events.slise(events.length - count, events.length);
+}

@@ -58,7 +58,6 @@ var create_miners = function(){
     var json = toJSON();
     ShipsModel.get_mining_count(json, function(mining_ships){
         if(mining_ships < mine_limit){
-            console.log('Miners count', mining_ships);
             ShipsModel.create_miner(json,create_miners);
         }
     });
@@ -68,7 +67,6 @@ var create_attackers = function(){
     var json = toJSON();
     ShipsModel.get_attackers_count(json, function(attackers_ships){
         if(attackers_ships < attackers_per_planet){
-            console.log('Attackers count', attackers_ships);
             ShipsModel.create_attacker(json,create_attackers);
         }
     });

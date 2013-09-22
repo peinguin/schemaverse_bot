@@ -2,14 +2,21 @@
 var client = undefined;
 var user = undefined;
 
-var planets = [];
-
 var PlanetModel = require('./../models/planet');
 
 var constructor = function (c, u) {
 	client = c;
     user = u;
 
+    //private variables
+    var planets = [];
+
+    //public methods
+    this.get_planets = function(){console.log(planets)
+        return planets;
+    };
+
+    //constructor
     (require('./../models/ships')).setClient(client);
 
 	// Get user planets

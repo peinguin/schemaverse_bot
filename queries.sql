@@ -44,7 +44,9 @@ SELECT id,
 SELECT
 	id, name, last_move_tic, (current_fuel::float)/max_fuel*100 as pb_fuel, max_speed, location, destination, speed, target_speed, action
 FROM my_ships WHERE name LIKE 'conqueror%'
-ast_action_tic,last_move_tic,last_living_tic,max_speed,action,action_target_id,destination,location,target_speed,speed,target_direction,direction  FROM my_ships WHERE name LIKE 'conqueror%';
+SELECT
+	id, name, last_action_tic,last_move_tic,last_living_tic,max_speed,action,action_target_id,destination,location,target_speed,speed,target_direction,direction
+FROM my_ships WHERE name LIKE 'conqueror%';
 
 #in_range
 SELECT DISTINCT ON (id) ships_in_range.* FROM ships_in_range

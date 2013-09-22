@@ -13,6 +13,10 @@ exports.setClient = function(c) {
 	client = c;
 }
 
+var mine = function(ship, planet, callback){
+	set_long_action('MINE', ship, planet, callback);
+}
+
 var set_long_action = function(action, who, whom, success){
 	client.query(
 		"UPDATE my_ships SET action = $1, action_target_id = $2 WHERE id = $3;",
@@ -23,6 +27,27 @@ var set_long_action = function(action, who, whom, success){
     		}
 		}
 	);
+}
+
+var get_damaged_in_travel = function(callback){
+	client.query(
+		"SELECT damaged.id id\
+		FROM my_ships damaged\
+		LEFT JOIN planets ON ((damaged.Location <-> planets.location) < 10)\
+		WHERE\
+			damaged.current_health < damaged.max_health AND\
+			planets.id is NULL AND\
+			action is NULL;", 
+		function(err, result){
+	        if (!err){
+	        	if(result.rowCount > 0){
+	        		 callback(result.rows[0].id);
+	        	}
+	        } else {
+	            throw err;
+	        }                      
+   		}
+   	);
 }
 
 var get_damaged = function(planet, callback){
@@ -60,7 +85,6 @@ var get_engineer = function(planet, callback){
 				            throw err;
 				        }else{
 				        	if(result.rowCount > 0){
-				        		console.log('Engineer created');
 				        		callback(result.rows[0].id);
 				        	}else{
 				        		console.log('Engineer not created');
@@ -73,6 +97,15 @@ var get_engineer = function(planet, callback){
 			    );
 			}
 		}
+	);
+}
+
+var autorepair = function(damaged, success){
+	set_long_action(
+		'REPAIR',
+		damaged,
+		damaged,
+		success
 	);
 }
 
@@ -126,10 +159,10 @@ exports.create_miner = function(planet, success, error){
 	            throw err;
 	        }else{
 	        	if(result.rowCount > 0){
-	        		console.log('Miner created');
-	        		set_long_action('MINE', result.rows[0].id, planet.id, success);
+	        		mine(result.rows[0].id, planet.id, success);
 	        	}else{
 	        		if(typeof(error) == "function"){
+	        			console.log('Miner not created');
 	        			error();
 	        		}
 	        	}
@@ -201,12 +234,12 @@ exports.create_attacker = function(planet, success, error){
 	            throw err;
 	        }else{
 	        	if(result.rowCount > 0){
-	        		console.log('Attacker created');
 	        		if(typeof(success) == "function"){
 	        			success();
 	        		}
 	        	}else{
 	        		if(typeof(error) == "function"){
+	        			console.log('Attacker not created');
 	        			error();
 	        		}
 	        	}
@@ -285,12 +318,34 @@ exports.get_enemy_ship_in_range = function(callback){
 	client.query(
 		"SELECT ships_in_range.id id, ships_in_range.ship_in_range_of ship_in_range_of\
 		FROM ships_in_range, my_ships\
-		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker' AND my_ships.action is NULL;", 
+		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker' AND my_ships.action <> 'ATTACK';", 
 		function(err, result){
 	        if (!err){
 	        	if(result.rowCount > 0){
 	        		if(typeof(callback) == 'function'){
 		        		callback(result.rows[0].ship_in_range_of, result.rows[0].id);
+		        	}
+	        	}
+	        } else {
+	            throw err;
+	        }                      
+   		}
+   	);
+}
+
+exports.get_enemy_planet_in_range = function(callback){
+	client.query(
+		"SELECT planets_in_range.planet id, planets_in_range.ship ship\
+		FROM planets_in_range, my_ships\
+		WHERE\
+			my_ships.id = planets_in_range.ship AND\
+			my_ships.name = 'attacker' AND\
+			my_ships.action is NULL;", 
+		function(err, result){
+	        if (!err){
+	        	if(result.rowCount > 0){
+	        		if(typeof(callback) == 'function'){
+		        		callback(result.rows[0].ship, result.rows[0].id);
 		        	}
 	        	}
 	        } else {
@@ -327,7 +382,7 @@ exports.send_ten_attackers = function(location){
 exports.amendment_course = function(){
 	client.query(
 		"SELECT\
-			SHIP_COURSE_CONTROL(id, round((location <->my_ships.destination)/2)::integer, null, my_ships.destination )\
+			SHIP_COURSE_CONTROL(id, round(location <->my_ships.destination)::integer, null, my_ships.destination )\
 		FROM my_ships WHERE (my_ships.destination <-> my_ships.location) > 10",
 		function(err, result){
 	        if (err) {
@@ -336,3 +391,9 @@ exports.amendment_course = function(){
    		}
    	);
 }
+
+exports.autorepair = autorepair;
+
+exports.get_damaged_in_travel = get_damaged_in_travel;
+
+exports.mine = mine;
