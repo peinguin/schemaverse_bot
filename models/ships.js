@@ -11,7 +11,7 @@ var upgrade_cost = 2375;
 
 exports.get_conquerers_count = function(callback){
 	client.query(
-		"SELECT COUNT(id) count \
+		"SELECT COUNT(my_ships.id) count \
 		FROM my_ships \
 			LEFT JOIN planets ON ((planets.location <-> my_ships.Location) < 10) \
 		WHERE name = 'attacker' AND planets.id is NULL;",
