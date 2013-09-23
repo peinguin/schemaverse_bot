@@ -77,7 +77,7 @@ module.exports = exports = function (c, p, u) {
 
         var after_load = function(){
             if(
-                attackers !== undefined &&
+                attackers_ships !== undefined &&
                 conquerers !== undefined &&
                 user.toJSON().balance > user.get_money_to_build_attacker() &&
                 (
