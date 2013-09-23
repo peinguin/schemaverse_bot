@@ -310,7 +310,9 @@ exports.refuel = function(ship, callback){
 	        		callback(result.rows[0].status);
 	        	}
 	        } else {
-	            throw err;
+	        	if(err != 'error: deadlock detected'){
+	            	throw err;
+	        	}
 	        }                      
    		}
    	);
@@ -320,7 +322,7 @@ exports.get_enemy_ship_in_range = function(callback){
 	client.query(
 		"SELECT ships_in_range.id id, ships_in_range.ship_in_range_of ship_in_range_of\
 		FROM ships_in_range, my_ships\
-		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker' AND my_ships.action <> 'ATTACK';", 
+		WHERE my_ships.id = ships_in_range.ship_in_range_of AND my_ships.name = 'attacker' AND (my_ships.action <> 'ATTACK' OR my_ships.action is NULL);", 
 		function(err, result){
 	        if (!err){
 	        	if(result.rowCount > 0){

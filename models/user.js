@@ -22,6 +22,7 @@ var id = undefined,
 
 var planetsCollection = undefined;
 var ShipsModel = require('./ships');
+var PlanetsCollection = require('./../collections/planets');
 
 var lastevent = undefined;
 var events = [];
@@ -111,7 +112,6 @@ var fuel_sell = function(FUEL, success){
 }
 
 var ship_upgrade = function(){
-
     if(balance > money_to_upgrade){
         ShipsModel.upgrade_ship(function(){
             update(ship_upgrade);
@@ -144,21 +144,6 @@ var get_tick = function(success){
             }
         }
     );  
-}
-
-toJSON = function(){
-    return {
-        id:id,
-        username:username,
-        created:created,
-        balance:balance,
-        fuel_reserve:fuel_reserve,
-        password:password,
-        error_channel:error_channel,
-        starting_fleet:starting_fleet,
-        symbol:symbol,
-        rgb:rgb
-    };
 }
 
 var attack_enemy_ships = function(){
@@ -286,11 +271,24 @@ var constructor = function (c) {
 
     this.get_planets = function(){
         if(planetsCollection){
-            return planetsCollection.get_planets();
-        }else{
-            return [];
+            return planetsCollection;
         }
     }
+
+    this.toJSON = function(){
+        return {
+            id:id,
+            username:username,
+            created:created,
+            balance:balance,
+            fuel_reserve:fuel_reserve,
+            password:password,
+            error_channel:error_channel,
+            starting_fleet:starting_fleet,
+            symbol:symbol,
+            rgb:rgb
+        };
+    };
 
     this.get_ships_count = function(callback){
         client.query(
@@ -306,23 +304,20 @@ var constructor = function (c) {
             }
         );
     };
+    this.get_money_to_build_attacker = function(){
+        return money_to_build_attacker;
+    };
 
     //constructor
     update(function(){
-        planetsCollection = new require('./../collections/planets').constructor(client, user);
+        planetsCollection = new PlanetsCollection(client, user);
         tick();
     });
 }
 
 exports.constructor = constructor;
 
-exports.toJSON = toJSON;
-
 exports.updateRequest = update;
-
-exports.get_money_to_build_attacker = function(){
-    return money_to_build_attacker;
-};
 
 exports.get_events = function(count){
     if(!count)

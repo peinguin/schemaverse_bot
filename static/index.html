@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Schemaverse map</title>
+	</head>
+	<script type="text/javascript" src="socket.min.js"></script>
+	<script type="text/javascript" src="/jquery-2.0.3.min.js"></script>
+	<script>
+
+		var x = 0, y = 0, zoom = 1;
+		var $map = undefined;
+		var $window = undefined;
+		var socket = undefined;
+
+		var getting_image = false;
+
+		var get_image = function(){
+			if(!getting_image){
+				getting_image = true;
+				socket.emit('get_map_base64', { x: x, y: y, zoom: zoom, w: $window.width(), h: $window.height() });
+			}
+		}
+
+		$(function(){
+			
+			$map = $('body');
+			$window = $(window);
+
+			socket = io.connect(window.location.origin);
+			socket.on('connect', function () {
+
+				socket.on('draw', function(data){
+					getting_image = false;
+					$map.css('background-image', 'url('+data+')');
+				});
+
+				get_image();
+			});
+
+			$window.on('resize', get_image);
+		});
+	</script>
+	<style>
+		#map{
+			display: :block;
+			width: 100%;
+			height: 100%;
+		}
+		body{
+			background-repeat: no-repeat;
+		}
+	</style>
+	<body>
+	</body>
+</html>

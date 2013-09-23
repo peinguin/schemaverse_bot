@@ -4,7 +4,7 @@ var user = undefined;
 
 var PlanetModel = require('./../models/planet');
 
-var constructor = function (c, u) {
+module.exports = exports = function (c, u) {
 	client = c;
     user = u;
 
@@ -12,8 +12,41 @@ var constructor = function (c, u) {
     var planets = [];
 
     //public methods
-    this.get_planets = function(){console.log(planets)
+    this.get_planets = function(){
         return planets;
+    };
+
+    //find_planets
+    this.find_planets = function(x1, x2, y1, y2, count, callback){
+        client.query(
+            "SELECT \
+                location_x - \
+                    (SELECT MIN(location_x) FROM planets WHERE location_x > $1 AND location_x < $2 AND location_y > $3 AND location_y < $4) \
+                    location_x, \
+                location_y - \
+                    (SELECT MIN(location_y) FROM planets WHERE location_x > $1 AND location_x < $2 AND location_y > $3 AND location_y < $4) \
+                    location_y, \
+                id, \
+                conqueror_id = get_player_id(SESSION_USER) own \
+            FROM ( \
+                    SELECT \
+                        * \
+                    FROM planets \
+                    WHERE \
+                        location_x > $1 AND location_x < $2 AND location_y > $3 AND location_y < $4 \
+                    ORDER BY location_x desc, location_y desc\
+                ) ordered \
+            ORDER BY RANDOM() \
+            limit $5",
+            [x1, x2, y1, y2, count],
+            function(err, result){
+                if (!err){
+                    callback(result.rows);
+                }else{
+                    throw err;
+                }
+            }
+        );
     };
 
     //constructor
@@ -27,7 +60,7 @@ var constructor = function (c, u) {
            
             if(result.rows.length > 0){
             	for(var i = 0; i < result.rows.length; i++){
-            		planets.push(new PlanetModel.constructor(
+            		planets.push(new PlanetModel(
                         client,
                         {
                 			id: result.rows[i].id,
@@ -51,5 +84,3 @@ var constructor = function (c, u) {
         }                      
     });
 }
-
-exports.constructor = constructor;

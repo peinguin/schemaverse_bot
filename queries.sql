@@ -61,6 +61,24 @@ WHERE
 	(player_id_1 = get_player_id(SESSION_USER) OR player_id_2 = get_player_id(SESSION_USER))
 LIMIT 25;
 
+SELECT
+	get_player_username(event.player_id_1) player1,
+	get_player_username(event.player_id_2) player2,
+	ship1.name ship1, ship2.name ship2,
+	event.action,
+	descriptor_numeric,
+	event.*
+FROM my_events event
+LEFT JOIN my_ships ship1 ON (ship1.id = event.ship_id_1)
+LEFT JOIN my_ships ship2 ON (ship2.id = event.ship_id_2)
+WHERE
+	(player_id_1 = get_player_id(SESSION_USER) OR player_id_2 = get_player_id(SESSION_USER)) AND
+	((ship1.name = 'attacker' AND event.action = 'MINE_SUCCESS') OR (event.action <> 'MINE_SUCCESS')) AND
+	((ship1.name = 'attacker' AND event.action = 'ATTACK') OR (event.action <> 'ATTACK')) AND
+	event.action not in ('REFUEL_SHIP', 'BUY_SHIP', 'UPGRADE_SHIP', 'REPAIR')
+order by tic desc, id desc
+LIMIT 10
+
 #stop
 SELECT SHIP_COURSE_CONTROL(id, speed, 360-direction, null )
 FROM my_ships WHERE name LIKE 'conqueror%'; 

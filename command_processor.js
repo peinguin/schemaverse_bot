@@ -5,7 +5,6 @@ var curr_command = '';
 var history_position = 0;
 
 var user = undefined;
-var client = undefined;
 
 var addCommand = function(command, func){
 	if(typeof(func) == 'function'){
@@ -13,44 +12,29 @@ var addCommand = function(command, func){
 	}
 }
 
-var print_map = function(){
-	client.query();
-}
-
-var get_planets = function(){
-	var planets = user.get_planets();console.log(planets)
-	for(var i in planets){
-		console.log(planets[i].toJSON());
-	}
-}
-
-var get_ships_count = function(){
-	user.get_ships_count(function(count){console.log(count);});;
-}
-
-addCommand('planets', get_planets);
-addCommand('ships.count', get_ships_count);
-
 var process_command = function(chunk){
 	chunk = chunk.replace(/(\n|\r)/gm,"");
 
 	if(commands[chunk]){
 		commands[chunk]();
 		history.push(chunk);
-	}else{
-		console.log(commands);
 	}
 }
+
+var help = function(){
+	console.log('Commands');
+	for(var i in commands){
+		console.log(i);
+	}
+}
+
+addCommand('help', help);
 
 var clean_line = function(){
 	process.stdout.write("\r                                                           \r");
 }
 
-var enable = function(u, c){
-
-	user = u;
-	client = c;	
-
+var console_processor = function(){
 	process.stdin.setRawMode( true );
 	process.stdin.resume();
 	process.stdin.setEncoding('utf8');
@@ -97,8 +81,21 @@ var enable = function(u, c){
 	});
 
 	process.stdin.on('end', function() {
-	  process.stdout.write('end');
+		process.stdout.write('end');
 	});
 }
 
-exports.enable = enable;
+var register_command = function(command){
+	return new (require('./commands/'+command))(addCommand, user);
+}
+
+var enable = function(u){
+	user = u;
+
+	register_command('helpers');
+	register_command('visualizer');
+
+	console_processor();
+}
+
+module.exports = exports = enable;
