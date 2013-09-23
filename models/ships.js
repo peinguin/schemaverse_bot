@@ -15,7 +15,6 @@ exports.get_conquerers_count = function(callback){
 		FROM my_ships \
 			LEFT JOIN planets ON ((planets.location <-> my_ships.Location) < 10) \
 		WHERE name = 'attacker' AND planets.id is NULL;",
-		[planet.location],
 		function(err, result){
 	        if (!err){
 	            callback(result.rows[0].count);
