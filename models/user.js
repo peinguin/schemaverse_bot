@@ -199,56 +199,66 @@ var constructor = function (c) {
     var tick = function(){
         get_tick(function(lt){
             if(lt != last_tick){
-                console.log('Tick '+lt, '. ','tick_timeout', tick_timeout);
 
-                last_tick = lt;
+                if(lt < last_tick){
+                    last_tick = undefined;
+                    update(function(){
+                        planetsCollection = new PlanetsCollection(client, user);
+                        tick();
+                    });
+                }else{
 
-                actions_rejected = false;
-                attack_rejected = false;
-                fuel_sells = false;
+                    console.log('Tick '+lt, '. ','tick_timeout', tick_timeout);
 
-                tick_timeout -= 1000;
-                if(tick_timeout < 1000){
-                    tick_timeout = 1000;
-                }
+                    last_tick = lt;
 
-                update(function(rows){
-                    if(fuel_reserve > fuel_to_save + fuel_to_sell){
-                        fuel_sell(fuel_reserve - fuel_to_save, function(){
+                    actions_rejected = false;
+                    attack_rejected = false;
+                    fuel_sells = false;
+
+                    tick_timeout -= 1000;
+                    if(tick_timeout < 1000){
+                        tick_timeout = 1000;
+                    }
+
+                    update(function(rows){
+                        if(fuel_reserve > fuel_to_save + fuel_to_sell){
+                            fuel_sell(fuel_reserve - fuel_to_save, function(){
+                                fuel_sells = true;
+                                after_tick();
+                            });
+                        }else{
                             fuel_sells = true;
                             after_tick();
-                        });
-                    }else{
-                        fuel_sells = true;
+                        }
+                    });
+
+                    ShipsModel.reject_long_action('REPAIR', undefined, undefined, function(){
+                        actions_rejected = true;
                         after_tick();
+                    });
+
+                    ShipsModel.reject_long_action('ATTACK', undefined, undefined, function(){
+                        attack_rejected = true;
+                        after_tick();
+                    });
+
+                    attack_enemy_ships();
+                    ship_refuel();
+                    ship_upgrade();
+                    autorepair_traveled();
+                    events_monitor();
+                    ShipsModel.amendment_course();
+
+                    for(var i in on){
+                        on[i]();
                     }
-                });
 
-                ShipsModel.reject_long_action('REPAIR', undefined, undefined, function(){
-                    actions_rejected = true;
-                    after_tick();
-                });
-
-                ShipsModel.reject_long_action('ATTACK', undefined, undefined, function(){
-                    attack_rejected = true;
-                    after_tick();
-                });
-
-                attack_enemy_ships();
-                ship_refuel();
-                ship_upgrade();
-                autorepair_traveled();
-                events_monitor();
-                ShipsModel.amendment_course();
-
-                for(var i in on){
-                    on[i]();
+                    for(var i in once){
+                        once[i]();
+                    }
+                    once = [];
                 }
-
-                for(var i in once){
-                    once[i]();
-                }
-                once = [];
 
             }else{
                 tick_timeout += 1000;
@@ -307,6 +317,8 @@ var constructor = function (c) {
     this.get_money_to_build_attacker = function(){
         return money_to_build_attacker;
     };
+
+    this.update = update;
 
     //constructor
     update(function(){
