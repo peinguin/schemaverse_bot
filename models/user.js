@@ -5,7 +5,7 @@ var fuel_to_save = 100000;
 var fuel_to_sell = 10000;
 
 var money_to_upgrade = 200000;
-var money_to_build_attacker = 200000;
+var money_to_build_attacker = 150000;
 var max_conquerers = 50;
 
 var last_tick = undefined;
