@@ -71,13 +71,32 @@ module.exports = exports = function (c, p, u) {
 
     var create_attackers = function(){
         var json = toJSON();
-        ShipsModel.get_attackers_count(json, function(attackers_ships){
+
+        var attackers_ships = undefined,
+            conquerers = undefined;
+
+        var after_load = function(){
             if(
+                attackers !== undefined &&
+                conquerers !== undefined &&
                 user.toJSON().balance > user.get_money_to_build_attacker() &&
-                attackers_ships < attackers_per_planet
+                (
+                    attackers_ships < attackers_per_planet ||
+                    conquerers < user.get_max_conquerers()
+                )
             ){
                 ShipsModel.create_attacker(json,create_attackers);
             }
+        }
+
+        ShipsModel.get_conquerers_count(function(c){
+            conquerers = c;
+            after_load();
+        })
+
+        ShipsModel.get_attackers_count(json, function(a){
+            attackers_ships = a;
+            after_load();
         });
     }
 
