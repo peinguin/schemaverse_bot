@@ -191,7 +191,7 @@ exports.upgrade_ship = function(success){
 	client.query(
 		"SELECT id, name, max_health, max_fuel, max_speed, range, attack, defense, engineering, prospecting FROM my_ships\
 		WHERE\
-			max_health < $1 OR max_fuel < $2 OR max_speed < $3 OR range < $4 OR (attack < $5 AND defense < $5 AND engineering < $5 AND prospecting < $5)\
+			max_health < $1 OR max_fuel < $2 OR max_speed < $3 OR range < $4 OR (attack + defense + engineering + prospecting)< $5\
 		ORDER BY range asc\
 		LIMIT 1;",
 		[MAX_HEALTH, MAX_FUEL, MAX_SPEED, RANGE, max],
@@ -201,14 +201,21 @@ exports.upgrade_ship = function(success){
 	        }else{
 	        	if(result.rowCount > 0){
 
+	        		var skills = {
+	        			PROSPECTING: 1,
+	        			ENGINEERING: 1,
+	        			ATTACK: 1,
+	        			DEFENSE: 1
+	        		}
+
 	        		if(result.rows[0].name == 'miner'){
-	        			var skill = 'PROSPECTING';
+	        			skills.PROSPECTING = 5;
 	        		}else if(result.rows[0].name == 'engineer'){
-	        			var skill = 'ENGINEERING';
+	        			skills.ENGINEERING = 5;
 	        		}else if(result.rows[0].name == 'attacker'){
-	        			var skill = 'ATTACK';
+	        			skills.ATTACK = 5;
 	        		}else{
-	        			var skill = 'DEFENSE';
+	        			skills.DEFENSE = 5;
 	        		}
 
 	        		client.query(
@@ -217,10 +224,13 @@ exports.upgrade_ship = function(success){
 						   UPGRADE(id, 'MAX_FUEL', 400), \
 						   UPGRADE(id, 'MAX_SPEED', 1600), \
 						   UPGRADE(id, 'RANGE', 10), \
-						   UPGRADE(id, $2, 1)\
+						   UPGRADE(id, 'PROSPECTING', $2),\
+						   UPGRADE(id, 'ENGINEERING', $3),\
+						   UPGRADE(id, 'ATTACK', $4),\
+						   UPGRADE(id, 'DEFENSE', $5)\
 						 FROM my_ships \
 						 WHERE id=$1;",
-						[result.rows[0].id, skill],
+						[result.rows[0].id, skills.PROSPECTING, skills.ENGINEERING, skills.ATTACK, skills.DEFENSE],
 						function(err, res){
 							if (err){
 								if(err != 'error: deadlock detected'){
@@ -353,7 +363,9 @@ exports.get_enemy_ship_in_range = function(callback){
 		        	}
 	        	}
 	        } else {
-	            throw err;
+	        	if(err != 'error: canceling statement due to user request'){
+	        		throw err;
+	        	}
 	        }                      
    		}
    	);
@@ -361,12 +373,14 @@ exports.get_enemy_ship_in_range = function(callback){
 
 exports.get_enemy_planet_in_range = function(callback){
 	client.query(
-		"SELECT planets_in_range.planet id, planets_in_range.ship ship\
-		FROM planets_in_range, my_ships\
+		"SELECT DISTINCT ON (planets_in_range.planet) planets_in_range.planet id, planets_in_range.ship ship\
+		FROM planets_in_range, my_ships, planets planet\
 		WHERE\
+			planet.id = planets_in_range.planet AND\
 			my_ships.id = planets_in_range.ship AND\
 			my_ships.name = 'attacker' AND\
-			my_ships.action is NULL;", 
+			my_ships.action is NULL AND \
+			planet.conqueror_id <> get_player_id(SESSION_USER);", 
 		function(err, result){
 	        if (!err){
 	        	if(result.rowCount > 0){
@@ -390,13 +404,14 @@ exports.attack = function(who, whom, callback){
 	);
 }
 
-exports.send_ten_attackers = function(location){
+exports.send_attackers = function(location, from, count){
 	client.query(
 		"SELECT\
-			(location <-> $1) dist,SHIP_COURSE_CONTROL(id,(location <->$1)::integer,null,$1)\
-		FROM my_ships WHERE name = 'attacker'\
-		LIMIT 10",
-		[location],
+			(ship.location <-> $1) dist, ship.id, SHIP_COURSE_CONTROL(ship.id,(ship.location <->$1)::integer,null,$1)\
+		FROM my_ships ship \
+		WHERE ship.name = 'attacker' AND (ship.location <-> $2) < 10\
+		LIMIT $3",
+		[location, from, count],
 		function(err, result){
 	        if (err) {
 	            throw err;
@@ -423,3 +438,46 @@ exports.autorepair = autorepair;
 exports.get_damaged_in_travel = get_damaged_in_travel;
 
 exports.mine = mine;
+
+exports.set_long_action = set_long_action;
+
+exports.get_own_not_near_own_planets = function(x1, x2, y1, y2, callback){
+	client.query(
+		"SELECT *, True own \
+		FROM my_ships ship, planets planet\
+		WHERE \
+			ship.location_x > $1 AND ship.location_x < $2 AND ship.location_y > $3 AND ship.location_y < $4 AND \
+			(planet.location <-> ship.location) > 10 AND \
+			planet.conqueror_id = get_player_id(SESSION_USER);",
+		[x1, x2, y1, y2],
+		function(err, result){
+	        if (!err){
+        		if(typeof(callback) == 'function'){
+	        		callback(result.rows);
+	        	}
+	        } else {
+	            throw err;
+	        }                      
+   		}
+   	);
+}
+
+exports.get_enemy_ships = function(x1, x2, y1, y2, callback){
+	client.query(
+		"SELECT *, False own, enemy_location[0] location_x, enemy_location[1] location_y \
+		FROM ships_in_range ship\
+		WHERE\
+			ship.enemy_location[0] > $1 AND ship.enemy_location[0] < $2 AND ship.enemy_location[1] > $3 AND ship.enemy_location[1] < $4 \
+		LIMIT 50",
+		[x1, x2, y1, y2],
+		function(err, result){
+	        if (!err){
+        		if(typeof(callback) == 'function'){
+	        		callback(result.rows);
+	        	}
+	        } else {
+	            callback([]);
+	        }
+   		}
+   	);
+}

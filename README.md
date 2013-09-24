@@ -3,15 +3,10 @@ schemaverse_bot
 
 Bot for popular PostgreSQL based online mmorpg.
 
-Requires
---------
-
-NodeJS, "pg" module.
-
-Not using backbonejs or other model library.
-
 To start
 --------
+
+> npm install
 
 Rename config.example.js to config.js.
 Set username/password.
@@ -27,3 +22,7 @@ HTML GUI for visualization
 --------------------------
 
 There is only map yet. Type "map" in console to view it.
+circle - planet
+square - ship
+Ships near own planets are not displayed.
+Map autoupdates after each tic.

@@ -20,12 +20,8 @@ module.exports = exports = function (c, u) {
     this.find_planets = function(x1, x2, y1, y2, count, callback){
         client.query(
             "SELECT \
-                location_x - \
-                    (SELECT MIN(location_x) FROM planets WHERE location_x > $1 AND location_x < $2 AND location_y > $3 AND location_y < $4) \
-                    location_x, \
-                location_y - \
-                    (SELECT MIN(location_y) FROM planets WHERE location_x > $1 AND location_x < $2 AND location_y > $3 AND location_y < $4) \
-                    location_y, \
+                location_x, \
+                location_y, \
                 id, \
                 conqueror_id = get_player_id(SESSION_USER) own \
             FROM ( \

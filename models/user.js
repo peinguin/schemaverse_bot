@@ -157,8 +157,7 @@ var attack_enemy_ships = function(){
 
 var conquer_enemy_planet = function(){
     ShipsModel.get_enemy_planet_in_range(function(ship, planet){
-        console.log(planet,'in range of',ship);
-        set_long_action('MINE', result.rows[0].id, planet.id, conquer_enemy_planet);
+        ShipsModel.set_long_action('MINE', ship, planet, conquer_enemy_planet);
     });
 }
 
@@ -187,7 +186,7 @@ var constructor = function (c) {
 	client = c;
 
     //private methods
-    var after_tick = function(){console.log(actions_rejected, fuel_sells,attack_rejected)
+    var after_tick = function(){
         if(
             actions_rejected &&
             fuel_sells &&
@@ -204,6 +203,9 @@ var constructor = function (c) {
                 if(lt < last_tick){
                     last_tick = undefined;
                     update(function(){
+                        console.log('New move');
+                        on = [];
+                        once = [];
                         planetsCollection = new PlanetsCollection(client, user);
                         tick();
                     });
@@ -250,15 +252,16 @@ var constructor = function (c) {
                     autorepair_traveled();
                     events_monitor();
                     ShipsModel.amendment_course();
+                    conquer_enemy_planet();
 
                     for(var i in on){
                         on[i]();
                     }
 
-                    for(var i in once){
-                        once[i]();
+                    var len = once.length;
+                    for(var i = 0; i < len; i++){
+                        (once.pop())();
                     }
-                    once = [];
                 }
 
             }else{

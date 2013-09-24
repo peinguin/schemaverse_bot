@@ -3,6 +3,7 @@ var client = undefined;
 var user = undefined;
 
 var attackers_per_planet = 50;
+var attackers_to_send = 40;
 
 var ShipsModel = require('./ships');
 
@@ -23,7 +24,7 @@ module.exports = exports = function (c, p, u) {
     var get_nearest_planet = function(success){
 
         client.query(
-            "SELECT * FROM planets WHERE conqueror_id <> get_player_id(SESSION_USER) ORDER BY location <-> $1 LIMIT 1",
+            "SELECT * FROM planets WHERE conqueror_id <> get_player_id(SESSION_USER) ORDER BY location <-> $1 asc LIMIT 1",
             [location],
             function(err, result){
                 if (err){
@@ -80,10 +81,7 @@ module.exports = exports = function (c, p, u) {
                 attackers_ships !== undefined &&
                 conquerers !== undefined &&
                 user.toJSON().balance > user.get_money_to_build_attacker() &&
-                (
-                    attackers_ships < attackers_per_planet ||
-                    conquerers < user.get_max_conquerers()
-                )
+                attackers_ships < attackers_per_planet
             ){
                 ShipsModel.create_attacker(json,create_attackers);
             }
@@ -101,13 +99,33 @@ module.exports = exports = function (c, p, u) {
     }
 
     var go_to_conqueror = function(){
+
         var json = toJSON();
-        ShipsModel.get_attackers_count(json, function(attackers_ships){
-            if(attackers_ships >= attackers_per_planet){
+
+        var attackers_ships = undefined,
+            conquerers = undefined;
+
+        var after_load = function(){
+            if(
+                attackers_ships !== undefined &&
+                conquerers !== undefined &&
+                attackers_ships >= attackers_per_planet &&
+                conquerers < user.get_max_conquerers()
+            ){
                 get_nearest_planet(function(nearest_planet_location){
-                    ShipsModel.send_ten_attackers(nearest_planet_location.location);
+                    ShipsModel.send_attackers(nearest_planet_location.location, location, attackers_to_send);
                 });
             }
+        }
+
+        ShipsModel.get_conquerers_count(function(c){
+            conquerers = c;
+            after_load();
+        })
+
+        ShipsModel.get_attackers_count(json, function(a){
+            attackers_ships = a;
+            after_load();
         });
     }
 
