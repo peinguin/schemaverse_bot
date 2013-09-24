@@ -192,17 +192,17 @@ var interactive_map = function(){
 				data.h = parseInt(data.h);
 				data.zoom = parseInt(data.zoom);
 
-				if(x > max_x){
-					x = max_x
+				if(data.x > max_x){
+					data.x = max_x
 				}
-				if(x > min_x){
-					x = min_x
+				if(data.x > min_x){
+					data.x = min_x
 				}
-				if(y > max_y){
-					y = max_y;
+				if(data.y > max_y){
+					data.y = max_y;
 				}
-				if(y > min_y){
-					y = min_y;
+				if(data.y > min_y){
+					data.y = min_y;
 				}
 
 				if(data.zoom >= 1 && data.w > 0 && data.h > 0){
