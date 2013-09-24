@@ -195,13 +195,13 @@ var interactive_map = function(){
 				if(data.x > max_x){
 					data.x = max_x
 				}
-				if(data.x > min_x){
+				if(data.x < min_x){
 					data.x = min_x
 				}
 				if(data.y > max_y){
 					data.y = max_y;
 				}
-				if(data.y > min_y){
+				if(data.y < min_y){
 					data.y = min_y;
 				}
 
