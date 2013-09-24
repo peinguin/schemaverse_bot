@@ -225,6 +225,8 @@ exports.upgrade_ship = function(success){
 							if (err){
 								if(err != 'error: deadlock detected'){
 									throw err;
+								}else{
+									success();
 								}
 					        }else{
 					        	success();
@@ -287,6 +289,8 @@ exports.reject_long_action = function(action, who, whom, success){
 			if (err){
 				if(err != 'error: deadlock detected'){
 	            	throw err;
+	        	}else{
+	        		success();
 	        	}
 		    }else{
 				if(typeof(success) == "function"){
@@ -328,6 +332,8 @@ exports.refuel = function(ship, callback){
 	        } else {
 	        	if(err != 'error: deadlock detected'){
 	            	throw err;
+	        	}else{
+	        		callback();
 	        	}
 	        }                      
    		}
