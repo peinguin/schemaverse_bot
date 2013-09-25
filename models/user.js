@@ -326,7 +326,7 @@ var constructor = function (c) {
     this.update = update;
 
     this.get_max_conquerers = function(){
-        return max_conquerers;
+        return max_conquerers * planetsCollection.get_planets().length;
     };
 
     //constructor
