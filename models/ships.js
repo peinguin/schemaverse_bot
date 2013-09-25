@@ -443,7 +443,7 @@ exports.set_long_action = set_long_action;
 
 exports.get_own_not_near_own_planets = function(x1, x2, y1, y2, callback){
 	client.query(
-		"SELECT *, True own \
+		"SELECT ship.*, True own \
 		FROM my_ships ship \
 			LEFT JOIN planets planet ON (planet.conqueror_id = get_player_id(SESSION_USER) AND (planet.location <-> ship.location) < 10)\
 		WHERE \
