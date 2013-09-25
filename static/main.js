@@ -111,7 +111,7 @@ $(function(){
 
 	$map.mousewheel(function(event, delta, deltaX, deltaY) {
     	if(!getting_image){
-    		appViewModel.zoom(appViewModel.zoom() + delta);
+    		appViewModel.zoom(parseInt(appViewModel.zoom()) + delta);
     	}
 	});
 
