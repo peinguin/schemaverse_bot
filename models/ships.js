@@ -255,7 +255,7 @@ exports.get_damaged = get_damaged;
 
 exports.create_attacker = function(planet, success, error){
 	client.query(
-		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('attacker',0,0,0,20,$1) RETURNING id;",
+		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('attacker',20,0,0,0,$1) RETURNING id;",
 		[planet.location],
 		function(err, result){
 	        if (err){
