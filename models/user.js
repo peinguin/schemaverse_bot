@@ -25,42 +25,39 @@ var planetsCollection = undefined;
 var ShipsModel = require('./ships');
 var PlanetsCollection = require('./../collections/planets');
 
-var lastevent = undefined;
 var events = [];
 var events_monitor = function(){
 
-    var params = [last_tick];
-    var conditions = [
-        "tic >= $"+(params.indexOf(last_tick) + 1),
-        "(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))",
-        "action not in ('UPGRADE_SHIP', 'BUY_SHIP', 'MINE_SUCCESS', 'REFUEL_SHIP', 'REPAIR', 'ATTACK', 'EXPLODE')"
-    ];
+    var last_vieved_tick = last_tick - 1;
 
-    if(lastevent){
-        params.push(lastevent);
-        conditions.push('id > $'+(params.indexOf(lastevent) + 1));
-    }
+    var params = [last_vieved_tick];
+    var conditions = [
+        "event.tic = $"+(params.indexOf(last_vieved_tick) + 1),
+        "(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))",
+        "((ship1.name = 'attacker' AND event.action = 'MINE_SUCCESS') OR (event.action <> 'MINE_SUCCESS'))",
+        "event.action not in ('UPGRADE_SHIP', 'REFUEL_SHIP')",
+    ];
 
     client.query(
         "SELECT\
-            *\
-        FROM my_events\
-        WHERE "+conditions.join(' AND ')+"\
-        ORDER BY id desc;",
+            event.*\
+        FROM my_events event \
+            LEFT JOIN my_ships ship1 ON (ship1.id = event.ship_id_1) \
+            LEFT JOIN my_ships ship2 ON (ship2.id = event.ship_id_2) \
+        WHERE "+conditions.join(' AND ')+" \
+        ORDER BY event.tic desc, event.id desc;",
         params,
         function(err, result){
             if (!err){
                 if(result.rowCount > 0){
-                    lastevent = result.rows[0].id;
                     events += result.rows;
 
                     for(var i in result.rows){
+                        console.log(result.rows[i].action, result.rows[i].action.indexOf('CONQUER'))
                         if(result.rows[i].action.indexOf('CONQUER')>-1){
                             console.log('conquered', result.rows[i]);
                         }
                     }
-
-                    console.log(result.rows);
                 }
             }else{
                 throw err;

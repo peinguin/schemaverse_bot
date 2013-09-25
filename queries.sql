@@ -28,7 +28,7 @@ WHERE
 	my_ships.id = curr.ship_id AND
 	(my_ships.location <-> my_ships.destination) > 10 AND
 	prev.ship_id = curr.ship_id AND prev.tic = curr.tic - 1
-ORder BY tic desc, my_ships.id
+ORder BY tic desc, dist asc, my_ships.id
 LIMIT 100
 
 #upgrade
