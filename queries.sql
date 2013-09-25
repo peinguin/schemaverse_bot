@@ -108,7 +108,18 @@ SELECT SHIP_COURSE_CONTROL(id, speed, 360-direction, null )
 FROM my_ships WHERE name LIKE 'conqueror%'; 
 
 #all ships
-SELECT name, COUNT (id), min(range), max(range), avg(range)::integer FROM my_ships GROUP BY name
+  SELECT
+    name,
+    COUNT (id),
+    avg(range)::integer,
+    avg(PROSPECTING)::integer PROSPECTING,
+    avg(ENGINEERING)::integer ENGINEERING,
+    avg(DEFENSE)::integer DEFENSE,
+    avg(ATTACK)::integer ATTACK,
+    avg(MAX_SPEED)::integer MAX_SPEED,
+    avg(MAX_FUEL)::integer MAX_FUEL,
+    avg(MAX_HEALTH)::integer MAX_HEALTH
+  FROM my_ships GROUP BY name
 #all attackers on own planets
 SELECT COUNT (ship.id)
 FROM my_ships ship, planets planet

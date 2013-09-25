@@ -54,7 +54,7 @@ var events_monitor = function(){
                     events += result.rows;
 
                     for(var i in result.rows){
-                        if(result.rows[i].action == 'CONQUER'){
+                        if(result.rows[i].indexOf('CONQUER')>-1){
                             console.log('conquered', result.rows[i]);
                         }
                     }
