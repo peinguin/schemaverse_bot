@@ -29,22 +29,23 @@ var lastevent = undefined;
 var events = [];
 var events_monitor = function(){
 
-    var params = [];
+    var params = [last_tick];
     var conditions = [
+        "tic >= $"+(params.indexOf(last_tick) + 1),
         "(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))",
         "action not in ('UPGRADE_SHIP', 'BUY_SHIP', 'MINE_SUCCESS', 'REFUEL_SHIP', 'REPAIR', 'ATTACK', 'EXPLODE')"
     ];
 
     if(lastevent){
         params.push(lastevent);
-        conditions.push('id > $1');
+        conditions.push('id > $'+(params.indexOf(lastevent) + 1));
     }
 
     client.query(
         "SELECT\
             *\
         FROM my_events\
-        WHERE"+conditions.join(' AND ')+"\
+        WHERE "+conditions.join(' AND ')+"\
         ORDER BY id desc;",
         params,
         function(err, result){
