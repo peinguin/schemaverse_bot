@@ -1,7 +1,7 @@
 
 var client = undefined;
 
-var fuel_to_save = 100000;
+var fuel_to_save = 200000;
 var fuel_to_sell = 10000;
 
 var money_to_upgrade = 200000;
