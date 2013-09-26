@@ -75,7 +75,7 @@ module.exports = exports = function (c, u) {
                 }
             }
         );
-    }
+    };
 
     //constructor
     (require('./../models/ships')).setClient(client);
