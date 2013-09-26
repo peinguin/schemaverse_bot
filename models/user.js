@@ -53,9 +53,9 @@ var events_monitor = function(){
                     events += result.rows;
 
                     for(var i in result.rows){
-                        console.log(result.rows[i].action, result.rows[i].action.indexOf('CONQUER'))
                         if(result.rows[i].action.indexOf('CONQUER')>-1){
-                            console.log('conquered', result.rows[i]);
+                            console.log('CONQUER', result.rows[i]);
+                            planetsCollection.add(result.rows[i].referencing_id);
                         }
                     }
                 }
@@ -199,6 +199,7 @@ var constructor = function (c) {
             if(lt != last_tick){
 
                 if(lt < last_tick){
+                    console.log('lt < last_tick',lt, last_tick);
                     last_tick = undefined;
                     update(function(){
                         console.log('New move');

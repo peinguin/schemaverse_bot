@@ -45,6 +45,38 @@ module.exports = exports = function (c, u) {
         );
     };
 
+    this.add = function(id){
+        client.query(
+            "SELECT *, conqueror_id = get_player_id(SESSION_USER) own \
+            FROM planets \
+            WHERE id = $1",
+            [id],
+            function(err, result){
+                if (!err){
+                    if(result.rowCount > 0){
+                        if(result.rows.own){
+                            planets.push(new PlanetModel(
+                                client,
+                                {
+                                    id: result.rows[0].id,
+                                    name: result.rows[0].name,
+                                    mine_limit: result.rows[0].mine_limit,
+                                    location_x: result.rows[0].location_x,
+                                    location_y: result.rows[0].location_y,
+                                    conqueror_id: result.rows[0].conqueror_id,
+                                    location: result.rows[0].location
+                                },
+                                user
+                            ));
+                        }
+                    }
+                }else{
+                    throw err;
+                }
+            }
+        );
+    }
+
     //constructor
     (require('./../models/ships')).setClient(client);
 
