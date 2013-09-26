@@ -129,15 +129,15 @@ module.exports = exports = function (c, p, u) {
         });
     }
 
+    //public methods
+    this.toJSON = toJSON;
+
     var tick = function(){
         repair_damaged();
         create_miners();
         create_attackers();
         go_to_conqueror();
     }
-
-    //public methods
-    this.toJSON = toJSON;
 
     //constructor
     user.on(tick);

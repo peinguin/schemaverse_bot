@@ -118,18 +118,6 @@ var ship_upgrade = function(){
     }
 }
 
-var ship_refuel = function(){
-    if(fuel_reserve > 0){
-        ShipsModel.get_fuel_empty_ship(function(ship){
-            if(ship){
-                ShipsModel.refuel(ship, function(){
-                    update(ship_refuel);
-                });
-            }
-        });
-    }
-}
-
 var get_tick = function(success){
     client.query(
         "SELECT * FROM tic_seq;",
@@ -224,8 +212,8 @@ var constructor = function (c) {
                     }
 
                     update(function(rows){
-                        if(fuel_reserve > fuel_to_save + fuel_to_sell){
-                            fuel_sell(fuel_reserve - fuel_to_save, function(){
+                        if(fuel_reserve > fuel_to_save * planetsCollection.get_planets().length + fuel_to_sell){
+                            fuel_sell(fuel_reserve - fuel_to_save * planetsCollection.get_planets().length, function(){
                                 fuel_sells = true;
                                 after_tick();
                             });
@@ -246,7 +234,7 @@ var constructor = function (c) {
                     });
 
                     attack_enemy_ships();
-                    ship_refuel();
+                    ShipsModel.refuel();
                     ship_upgrade();
                     autorepair_traveled();
                     events_monitor();

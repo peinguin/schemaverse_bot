@@ -356,35 +356,11 @@ exports.reject_long_action = function(action, who, whom, success){
 	);
 }
 
-exports.get_fuel_empty_ship = function(callback){
+exports.refuel = function(){
 	client.query(
-		"SELECT *\
-		FROM my_ships\
-		WHERE current_fuel < max_fuel;", 
+		"SELECT refuel_ship(my_ships.id) status FROM my_ships WHERE current_fuel < max_fuel;",
 		function(err, result){
-	        if (!err){
-	        	if(result.rowCount > 0){
-	        		callback(result.rows[0].id);
-	        	}else{
-	        		callback(undefined);
-	        	}
-	        } else {
-	            throw err;
-	        }                      
-   		}
-   	);
-}
-
-exports.refuel = function(ship, callback){
-	client.query(
-		"SELECT refuel_ship($1) status;", 
-		[ship],
-		function(err, result){
-	        if (!err){
-	        	if(typeof(callback) == 'function'){
-	        		callback(result.rows[0].status);
-	        	}
-	        } else {
+	        if (err){
 	        	if(err != 'error: deadlock detected'){
 	            	throw err;
 	        	}else{
