@@ -26,7 +26,10 @@ var to_local = function(x, y, x1, x2, y1, y2, img_w, img_h){
 	return {x: (x - x1) * (img_w / (x2 - x1)), y: (y - y1) * (img_h / (y2 - y1))};
 }
 
-var render_planets = function(ctx, planets, x1, x2, y1, y2, w, h){
+var render_planets = function(ctx, planets, x1, x2, y1, y2, w, h, zoom){
+
+	var planet_zoom_divider = 1;
+
 	for(i in planets){
 
 		var local = to_local(planets[i].location_x, planets[i].location_y, x1, x2, y1, y2, w, h);
@@ -39,7 +42,7 @@ var render_planets = function(ctx, planets, x1, x2, y1, y2, w, h){
 		ctx.arc(
 			local.x,
 			local.y,
-			1,
+			Math.ceil(zoom/planet_zoom_divider),
 			0,2*Math.PI
 		);
 		ctx.stroke();
@@ -103,7 +106,7 @@ var get_map = function(x, y, w, h, zoom, show_planets, show_ships, callback){
 	if(show_planets){
 		user.get_planets().find_planets(
 			x1, x2, y1, y2, 5000000, function(planets){
-				render_planets(ctx, planets, x1, x2, y1, y2, w, h);
+				render_planets(ctx, planets, x1, x2, y1, y2, w, h, zoom);
 				planets_rendered = true;
 				after_render();
 			}
