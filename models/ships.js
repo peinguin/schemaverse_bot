@@ -278,7 +278,10 @@ exports.upgrade_ship = function(success){
 						],
 						function(err, res){
 							if (err){
-								if(err != 'error: deadlock detected'){
+								if(
+									err != 'error: deadlock detected' &&
+									err != 'error: canceling statement due to user request'
+								){
 									throw err;
 								}else{
 									success();
