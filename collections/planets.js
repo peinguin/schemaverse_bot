@@ -54,7 +54,7 @@ module.exports = exports = function (c, u) {
             function(err, result){
                 if (!err){
                     if(result.rowCount > 0){
-                        if(result.rows.own){
+                        if(result.rows[0].own){
                             planets.push(new PlanetModel(
                                 client,
                                 {

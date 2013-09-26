@@ -1,13 +1,48 @@
 
 var client = undefined;
 
-var max = 500;
-var MAX_HEALTH = 1000;
-var MAX_FUEL = 200000;
-var MAX_SPEED = 800000;
-var RANGE = 5000;
+var begin = {
+	health: 100,
+	fuel: 100,
+	speed: 1000,
+	range: 300,
+	profile: 17,
+	non_profile: 1
+};
 
-var upgrade_cost = 2375;
+var max = {
+	health: 1000,
+	fuel: 200000,
+	speed: 800000,
+	range: 5000,
+	profile: 400,
+	non_profile: 25
+};
+
+var upgrade_steps = 100;
+
+var upgrade_cost = {
+	health: 50,
+	fuel: 1,
+	speed: 1,
+	range: 25,
+	profile: 25,
+	non_profile: 25
+}
+
+var per_upgrade_tic = {
+	health:      Math.ceil((max.profile     - begin.profile    )/upgrade_steps),
+	fuel:        Math.ceil((max.profile     - begin.profile    )/upgrade_steps),
+	speed:       Math.ceil((max.profile     - begin.profile    )/upgrade_steps),
+	range:       Math.ceil((max.profile     - begin.profile    )/upgrade_steps),
+	profile:     Math.ceil((max.profile     - begin.profile    )/upgrade_steps),
+	non_profile: Math.ceil((max.non_profile - begin.non_profile)/upgrade_steps)
+}
+
+var upgrade_full_cost = 0;
+for(var i in begin){
+	upgrade_full_cost += Math.ceil((max[i] - begin[i])/upgrade_steps)*upgrade_cost[i];
+}
 
 exports.get_conquerers_count = function(callback){
 	client.query(
@@ -94,8 +129,8 @@ var get_engineer = function(planet, callback){
 				callback(result.rows[0].id);
 			}else{
 				client.query(
-					"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('engineer',0,0,20,0,$1) RETURNING id;",
-					[planet.location],
+					"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('engineer',$2,$2,$3,$2,$1) RETURNING id;",
+					[planet.location, begin.non_profile, begin.profile],
 					function(err, result){
 				        if (err){
 				            throw err;
@@ -168,8 +203,8 @@ exports.get_mining_count = function(planet, callback){
 
 exports.create_miner = function(planet, success, error){
 	client.query(
-		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('miner',0,0,0,20,$1) RETURNING id;",
-		[planet.location],
+		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('miner',$2,$2,$2,$3,$1) RETURNING id;",
+		[planet.location, begin.non_profile, begin.profile],
 		function(err, result){
 	        if (err){
 	            throw err;
@@ -194,7 +229,7 @@ exports.upgrade_ship = function(success){
 			max_health < $1 OR max_fuel < $2 OR max_speed < $3 OR range < $4 OR (attack + defense + engineering + prospecting)< $5\
 		ORDER BY range asc\
 		LIMIT 1;",
-		[MAX_HEALTH, MAX_FUEL, MAX_SPEED, RANGE, max],
+		[max.health, max.fuel, max.speed, max.range, max.sum],
 		function(err, result){
 			if (err){
 	            throw err;
@@ -202,35 +237,45 @@ exports.upgrade_ship = function(success){
 	        	if(result.rowCount > 0){
 
 	        		var skills = {
-	        			PROSPECTING: 1,
-	        			ENGINEERING: 1,
-	        			ATTACK: 1,
-	        			DEFENSE: 1
-	        		}
+	        			PROSPECTING: per_upgrade_tic.non_profile,
+						ENGINEERING: per_upgrade_tic.non_profile,
+						ATTACK: per_upgrade_tic.non_profile,
+						DEFENSE: per_upgrade_tic.non_profile
+					};
 
 	        		if(result.rows[0].name == 'miner'){
-	        			skills.PROSPECTING = 5;
+	        			skills.PROSPECTING = per_upgrade_tic.profile;
 	        		}else if(result.rows[0].name == 'engineer'){
-	        			skills.ENGINEERING = 5;
+	        			skills.ENGINEERING = per_upgrade_tic.profile;
 	        		}else if(result.rows[0].name == 'attacker'){
-	        			skills.ATTACK = 5;
+	        			skills.ATTACK = per_upgrade_tic.profile;
 	        		}else{
-	        			skills.DEFENSE = 5;
+	        			skills.DEFENSE = per_upgrade_tic.profile;
 	        		}
 
 	        		client.query(
 	        			"SELECT id,\
-						   UPGRADE(id, 'MAX_HEALTH', 2), \
-						   UPGRADE(id, 'MAX_FUEL', 400), \
-						   UPGRADE(id, 'MAX_SPEED', 1600), \
-						   UPGRADE(id, 'RANGE', 10), \
-						   UPGRADE(id, 'PROSPECTING', $2),\
-						   UPGRADE(id, 'ENGINEERING', $3),\
-						   UPGRADE(id, 'ATTACK', $4),\
-						   UPGRADE(id, 'DEFENSE', $5)\
+						   UPGRADE(id, 'MAX_HEALTH',  $2), \
+						   UPGRADE(id, 'MAX_FUEL',    $3), \
+						   UPGRADE(id, 'MAX_SPEED',   $4), \
+						   UPGRADE(id, 'RANGE',       $5), \
+						   UPGRADE(id, 'PROSPECTING', $6),\
+						   UPGRADE(id, 'ENGINEERING', $7),\
+						   UPGRADE(id, 'ATTACK',      $8),\
+						   UPGRADE(id, 'DEFENSE',     $9)\
 						 FROM my_ships \
 						 WHERE id=$1;",
-						[result.rows[0].id, skills.PROSPECTING, skills.ENGINEERING, skills.ATTACK, skills.DEFENSE],
+						[
+							result.rows[0].id,
+							per_upgrade_tic.health,
+							per_upgrade_tic.fuel,
+							per_upgrade_tic.speed,
+							per_upgrade_tic.range,
+							skills.PROSPECTING,
+							skills.ENGINEERING,
+							skills.ATTACK,
+							skills.DEFENSE
+						],
 						function(err, res){
 							if (err){
 								if(err != 'error: deadlock detected'){
@@ -255,8 +300,8 @@ exports.get_damaged = get_damaged;
 
 exports.create_attacker = function(planet, success, error){
 	client.query(
-		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('attacker',20,0,0,0,$1) RETURNING id;",
-		[planet.location],
+		"INSERT INTO my_ships(name, attack, defense, engineering, prospecting , location) values ('attacker',$3,$2,$2,$2,$1) RETURNING id;",
+		[planet.location, begin.non_profile, begin.profile],
 		function(err, result){
 	        if (err){
 	            throw err;
