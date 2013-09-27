@@ -60,7 +60,9 @@ var events_monitor = function(){
                     }
                 }
             }else{
-                throw err;
+                if(err != 'error: canceling statement due to user request'){
+                    throw err;
+                }
             }
         }
     );
