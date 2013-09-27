@@ -90,10 +90,10 @@ var watch_ships = function(){
 			my_ships.id, \
 			name,\
 			curr.tic,\
-			round((curr.location <-> destination),2) dist,\
-			round((current_fuel::float)/max_fuel*100,2) as pb_fuel,\
-			round((current_health::float)/max_health*100,2) as pb_health,\
-			round(((prev.location <-> destination) - (curr.location <-> destination)),2) speed\
+			round((curr.location <-> destination)::numeric,2) dist,\
+			round(((current_fuel::float)/max_fuel*100)::numeric,2) as pb_fuel,\
+			round(((current_health::float)/max_health*100)::numeric ,2) as pb_health,\
+			round(((prev.location <-> destination) - (curr.location <-> destination))::numeric,2) speed\
 		FROM my_ships_flight_recorder curr, my_ships, my_ships_flight_recorder prev\
 		WHERE\
 			my_ships.id = curr.ship_id AND\
