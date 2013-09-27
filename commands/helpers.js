@@ -1,11 +1,22 @@
+var sprintf = require('sprintf-js').sprintf;
+
 var user = undefined,
 	client = undefined;
 
 var dislay_in_table = function(rows){
+
+	if(rows.length == 0){
+		return false;
+	}
+
 	var columns = {};
-	for(var i in rows){
-		if(!columns[i] || columns[i] < rows[i].length){
-			columns[i] = rows[i].length;
+
+	for(var j in rows){
+		for(var i in rows[j]){
+			var col = rows[j][i].toString();
+			if(!columns[i] || columns[i] < col.length){
+				columns[i] = col.length;
+			}
 		}
 	}
 
