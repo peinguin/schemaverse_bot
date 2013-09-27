@@ -55,7 +55,7 @@ exports.get_conquerers_count = function(callback){
 	            callback(result.rows[0].count);
 	        } else {
 	            throw err;
-	        }                      
+	        }
     	}
     );
 }

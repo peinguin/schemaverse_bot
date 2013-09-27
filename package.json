@@ -3,6 +3,7 @@
   	"socket.io": "*",
   	"canvas": "*",
   	"pg": "*",
-  	"open": "*"
+  	"open": "*",
+  	"sprintf-js": "*"
   }
 }

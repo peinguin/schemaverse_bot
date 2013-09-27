@@ -11,7 +11,7 @@ var CommandProcessor = require('./command_processor');
 pg.connect(conn, function(err, client) {
     if (!err){
         var userModel = new UserModel.constructor(client);
-        CommandProcessor(userModel);
+        CommandProcessor(userModel, client);
     } else {
         console.log(err);
     }

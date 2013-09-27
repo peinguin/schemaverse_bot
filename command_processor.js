@@ -4,7 +4,8 @@ var history = [];
 var curr_command = '';
 var history_position = 0;
 
-var user = undefined;
+var user = undefined,
+	client = undefined;
 
 var addCommand = function(command, func){
 	if(typeof(func) == 'function'){
@@ -86,11 +87,12 @@ var console_processor = function(){
 }
 
 var register_command = function(command){
-	return new (require('./commands/'+command))(addCommand, user);
+	return new (require('./commands/'+command))(addCommand, user, client);
 }
 
-var enable = function(u){
+var enable = function(u, c){
 	user = u;
+	client = c;
 
 	register_command('helpers');
 	register_command('visualizer');
