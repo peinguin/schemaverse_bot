@@ -14,7 +14,11 @@ var dislay_in_table = function(rows){
 	for(var j in rows){
 		for(var i in rows[j]){
 			var col = rows[j][i].toString();
-			if(!columns[i] || columns[i] < col.length){
+
+			if(!columns[i]){
+				columns[i] = i.length;
+			}
+			if(columns[i] < col.length){
 				columns[i] = col.length;
 			}
 		}
@@ -83,12 +87,13 @@ var get_all_ships = function(){
 var watch_ships = function(){
 	client.query(
 		"SELECT\
+			my_ships.id, \
 			name,\
 			curr.tic,\
-			(curr.location <-> destination) dist,\
-			(current_fuel::float)/max_fuel*100 as pb_fuel,\
-			(current_health::float)/max_health*100 as pb_health,\
-			((prev.location <-> destination) - (curr.location <-> destination)) speed\
+			round((curr.location <-> destination) dist,2),\
+			round((current_fuel::float)/max_fuel*100 as pb_fuel,2),\
+			round((current_health::float)/max_health*100 as pb_health,2),\
+			round(((prev.location <-> destination) - (curr.location <-> destination)),2) speed\
 		FROM my_ships_flight_recorder curr, my_ships, my_ships_flight_recorder prev\
 		WHERE\
 			my_ships.id = curr.ship_id AND\
