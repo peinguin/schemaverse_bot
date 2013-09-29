@@ -191,6 +191,7 @@ var constructor = function (c) {
                 if(lt < last_tick){
                     console.log('lt < last_tick',lt, last_tick);
                     last_tick = undefined;
+                    tick_timeout = 1000;
                     update(function(){
                         console.log('New move');
                         on = [];
