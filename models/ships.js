@@ -139,9 +139,6 @@ var get_engineer = function(planet, callback){
 				        		callback(result.rows[0].id);
 				        	}else{
 				        		console.log('Engineer not created');
-				        		if(typeof(callback) == "function"){
-				        			callback();
-				        		}
 				        	}
 				        }                 
 			    	}

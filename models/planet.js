@@ -129,6 +129,20 @@ module.exports = exports = function (c, p, u) {
         });
     }
 
+    client.query(
+        "UPDATE my_ships SET action_target_id = $1 WHERE (location <-> $2) < 10 and name = 'miner'",
+        [id, location],
+        function(err, result){
+            if (err){
+                throw err;
+            }else{
+                if(err){
+                    throw err;
+                }
+            }                 
+        }
+    );
+
     //public methods
     this.toJSON = toJSON;
 

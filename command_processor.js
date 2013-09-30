@@ -18,7 +18,9 @@ var process_command = function(chunk){
 
 	if(commands[chunk]){
 		commands[chunk]();
-		history.push(chunk);
+		if(history[history.length - 1] != chunk){
+			history.push(chunk);
+		}
 	}
 }
 

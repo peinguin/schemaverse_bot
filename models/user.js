@@ -2,10 +2,9 @@
 var client = undefined;
 
 var fuel_to_save = 100000;
-var fuel_to_sell = 10000;
 
 var money_to_upgrade = 200000;
-var money_to_build_attacker = 50000;
+var money_to_build_attacker = 10000;
 var max_conquerers = 50;
 
 var last_tick = undefined;
@@ -189,8 +188,9 @@ var constructor = function (c) {
             if(lt != last_tick){
 
                 if(lt < last_tick){
-                    console.log('lt < last_tick',lt, last_tick);
+                    console.log('lt < last_tick',lt, last_tick, lt < last_tick, parseInt(lt) < parseInt(last_tick));
                     last_tick = undefined;
+                    tick_timeout = 1000;
                     update(function(){
                         console.log('New move');
                         on = [];
@@ -214,7 +214,7 @@ var constructor = function (c) {
                     }
 
                     update(function(rows){
-                        if(fuel_reserve > fuel_to_save * planetsCollection.get_planets().length + fuel_to_sell){
+                        if(fuel_reserve > fuel_to_save * planetsCollection.get_planets().length){
                             fuel_sell(fuel_reserve - fuel_to_save * planetsCollection.get_planets().length, function(){
                                 fuel_sells = true;
                                 after_tick();
