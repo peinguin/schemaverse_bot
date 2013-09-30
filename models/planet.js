@@ -24,8 +24,11 @@ module.exports = exports = function (c, p, u) {
     var get_nearest_planet = function(success){
 
         client.query(
-            "SELECT * FROM planets WHERE conqueror_id <> get_player_id(SESSION_USER) ORDER BY location <-> $1 asc LIMIT 1",
-            [location],
+            "SELECT * FROM planets WHERE \
+                conqueror_id <> get_player_id(SESSION_USER) AND \
+                (SELECT count(my_ships.id) FROM my_ships WHERE (my_ships.destination <-> planets.location) < 10) < $2\
+            ORDER BY location <-> $1 asc LIMIT 1",
+            [location, user.get_conqurers_per_planet()],
             function(err, result){
                 if (err){
                     throw err;

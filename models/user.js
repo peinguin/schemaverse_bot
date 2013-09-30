@@ -5,7 +5,8 @@ var fuel_to_save = 100000;
 
 var money_to_upgrade = 200000;
 var money_to_build_attacker = 10000;
-var max_conquerers = 50;
+var max_conquerers = 500;
+var conquerers_per_planet = 50;
 
 var last_tick = undefined;
 
@@ -315,6 +316,10 @@ var constructor = function (c) {
 
     this.get_max_conquerers = function(){
         return max_conquerers * planetsCollection.get_planets().length;
+    };
+
+    this.get_conqurers_per_planet = function(){
+        return conquerers_per_planet;
     };
 
     //constructor
