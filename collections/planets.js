@@ -46,6 +46,13 @@ module.exports = exports = function (c, u) {
     };
 
     this.add = function(id){
+
+        for(var i in planets){
+            if(planets[i].id == id){
+                return false;
+            }
+        }
+
         client.query(
             "SELECT *, conqueror_id = get_player_id(SESSION_USER) own \
             FROM planets \

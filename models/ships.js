@@ -444,7 +444,7 @@ exports.send_attackers = function(location, from, count){
 exports.amendment_course = function(){
 	client.query(
 		"SELECT\
-			SHIP_COURSE_CONTROL(id, round(location <->my_ships.destination)::integer, null, my_ships.destination )\
+			SHIP_COURSE_CONTROL(id, round((location <->my_ships.destination) / 2)::integer, null, my_ships.destination )\
 		FROM my_ships WHERE (my_ships.destination <-> my_ships.location) > 10",
 		function(err, result){
 	        if (err) {

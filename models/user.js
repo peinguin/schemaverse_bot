@@ -26,17 +26,20 @@ var ShipsModel = require('./ships');
 var PlanetsCollection = require('./../collections/planets');
 
 var events = [];
+var last_monitored_tick = undefined;
 var events_monitor = function(){
 
-    var last_vieved_tick = last_tick - 1;
-
-    var params = [last_vieved_tick];
+    var params = [];
     var conditions = [
-        "event.tic = $"+(params.indexOf(last_vieved_tick) + 1),
         "(player_id_2 = get_player_id(SESSION_USER) OR player_id_1 = get_player_id(SESSION_USER))",
         "((ship1.name = 'attacker' AND event.action = 'MINE_SUCCESS') OR (event.action <> 'MINE_SUCCESS'))",
         "event.action not in ('UPGRADE_SHIP', 'REFUEL_SHIP')",
     ];
+
+    if(!last_monitored_tick){
+        params.push(last_monitored_tick);
+        conditions.push("event.tic >= $"+(params.indexOf(last_monitored_tick) + 1))
+    }
 
     client.query(
         "SELECT\
@@ -51,6 +54,8 @@ var events_monitor = function(){
             if (!err){
                 if(result.rowCount > 0){
                     events += result.rows;
+
+                    last_monitored_tick = result.rows[0].tic;
 
                     for(var i in result.rows){
                         if(result.rows[i].action.indexOf('CONQUER')>-1){
@@ -211,6 +216,10 @@ var constructor = function (c) {
 
                     tick_timeout -= 1000;
                     if(tick_timeout < 1000){
+                        tick_timeout = 1000;
+                    }
+
+                    if(lt != last_tick + 1){
                         tick_timeout = 1000;
                     }
 
