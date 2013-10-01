@@ -36,10 +36,8 @@ var events_monitor = function(){
         "event.action not in ('UPGRADE_SHIP', 'REFUEL_SHIP')",
     ];
 
-    if(!last_monitored_tick){
-        params.push(last_monitored_tick);
-        conditions.push("event.tic >= $"+(params.indexOf(last_monitored_tick) + 1))
-    }
+    params.push(last_monitored_tick);
+    conditions.push("event.tic >= $"+(params.indexOf(last_monitored_tick) + 1))
 
     client.query(
         "SELECT\
@@ -54,10 +52,12 @@ var events_monitor = function(){
             if (!err){
                 if(result.rowCount > 0){
                     events += result.rows;
-
-                    last_monitored_tick = result.rows[0].tic;
-
                     for(var i in result.rows){
+
+                        if(result.rows[i].tic > last_monitored_tick){
+                            last_monitored_tick = result.rows[i].tic;
+                        }
+
                         if(result.rows[i].action.indexOf('CONQUER')>-1){
                             console.log('CONQUER', result.rows[i]);
                             planetsCollection.add(result.rows[i].referencing_id);
@@ -191,6 +191,11 @@ var constructor = function (c) {
 
     var tick = function(){
         get_tick(function(lt){
+
+            if(!last_monitored_tick){
+                last_monitored_tick = lt;
+            }
+
             if(lt != last_tick){
 
                 if(lt < last_tick){

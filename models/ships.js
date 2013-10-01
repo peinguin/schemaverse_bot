@@ -204,7 +204,9 @@ exports.create_miner = function(planet, success, error){
 		[planet.location, begin.non_profile, begin.profile],
 		function(err, result){
 	        if (err){
-	            throw err;
+	        	if(err != 'error: canceling statement due to user request'){
+	        		throw err;
+	        	}
 	        }else{
 	        	if(result.rowCount > 0){
 	        		mine(result.rows[0].id, planet.id, success);
